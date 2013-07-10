@@ -101,4 +101,4 @@ aws_s3: {
 - Mock options for actual unit testing
 
 ## Release History
-* 2013-03-26   v0.1.0   First release
+* 2013-07-10   v0.1.0   First release
