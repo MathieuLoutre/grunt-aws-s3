@@ -11,6 +11,7 @@
 var path = require('path');
 var fs = require('fs');
 var AWS = require('aws-sdk');
+var mime = require('mime');
 
 module.exports = function(grunt) {
 
@@ -74,8 +75,9 @@ module.exports = function(grunt) {
 				upload = grunt.util._.extend({Key: task.dest}, s3_object);
 			}
 			else {
+				var type = mime.lookup(task.src);
 				var buffer = grunt.file.read(task.src, {encoding: null});
-				upload = grunt.util._.extend({Body: buffer, Key: task.dest}, s3_object);
+				upload = grunt.util._.extend({ContentType: type, Body: buffer, Key: task.dest}, s3_object);
 			}
 
 			s3.putObject(upload, function(err, data) {
@@ -84,18 +86,20 @@ module.exports = function(grunt) {
 		}, 1);
 
 		queue.drain = function () {
-			grunt.log.write(objects.length.toString().cyan + ' objects created on the bucket ' + options.bucket.toString().cyan);
+
+			grunt.log.writeln(objects.length.toString().cyan + ' objects created on the bucket ' + options.bucket.toString().cyan);
 			done();
 		};
 
 		queue.push(objects, function (err) {
+
 			var objectURL = s3.endpoint.href + options.bucket + '/' + this.data.dest;
 
 			if (err) {
 				grunt.fatal('Failed to upload ' + this.data.src.toString().cyan + ' to ' + objectURL.toString().cyan);
 			}
 			else {
-				grunt.verbose.writeln(this.data.src.toString().cyan + ' uploaded to ' + objectURL.toString().cyan);
+				grunt.log.writeln(this.data.src.toString().cyan + ' uploaded to ' + objectURL.toString().cyan);
 			}
 		});
 	});

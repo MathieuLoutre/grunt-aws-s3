@@ -65,7 +65,7 @@ aws: grunt.file.readJSON('aws-keys.json'), // Read the file
 aws_s3: {
   options: {
     accessKeyId: "<%= aws.AWSAccessKeyId %>", // Use the variables
-    secretAccessKey: "<%= aws.AWSSecretKey %>", // You can also use environment variables
+    secretAccessKey: "<%= aws.AWSSecretKey %>", // You can also use env variables
     region: 'eu-west-1',
   },
   staging: {
@@ -85,7 +85,7 @@ aws_s3: {
       {expand: true, cwd: "dist/production", src: ['**'], dest: 'app/'},
     ]
   },
-  private: {
+  secret: {
     options: {
       bucket: 'my-wonderful-private-bucket',
       access: 'private'
