@@ -19,14 +19,16 @@ module.exports = function(grunt) {
 		var done = this.async();
 
 		var options = this.options({
-			access: 'public-read'
+			access: 'public-read',
+			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 		});
 		
-		if (!options.accessKeyId || process.env.AWS_ACCESS_KEY_ID) {
+		if (!options.accessKeyId) {
 			grunt.warn("Missing accessKeyId in options");
 		}
 
-		if (!options.secretAccessKey || process.env.AWS_SECRET_ACCESS_KEY) {
+		if (!options.secretAccessKey) {
 			grunt.warn("Missing secretAccessKey in options");
 		}
 

@@ -102,3 +102,4 @@ aws_s3: {
 
 ## Release History
 * 2013-07-10   v0.1.0   First release
+* 2013-07-11   v0.1.1   Fix bug when using env variable
