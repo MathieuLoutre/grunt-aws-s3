@@ -50,7 +50,7 @@ The ACL you want to apply to ALL the files that will be uploaded. The ACL values
 #### options.params
 Type: `Object`
 
-A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to all the files selected.
+A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to all the files in the target.
 
 ### Usage Examples
 
@@ -111,4 +111,4 @@ aws_s3: {
 ## Release History
 * 2013-07-10   v0.1.0   First release
 * 2013-07-11   v0.1.1   Fix bug when using env variable
-* 2013-07-11   v0.2.0   Can set additional params
+* 2013-07-16   v0.2.0   Can set additional params
