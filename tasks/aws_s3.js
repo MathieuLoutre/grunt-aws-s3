@@ -23,6 +23,11 @@ module.exports = function(grunt) {
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 		});
+
+		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding', 
+		'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl', 
+		'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 
+		'StorageClass', 'WebsiteRedirectLocation'];
 		
 		if (!options.accessKeyId) {
 			grunt.warn("Missing accessKeyId in options");
@@ -40,8 +45,16 @@ module.exports = function(grunt) {
 			grunt.warn("Missing bucket in options");
 		}
 
+		if (options.params) {
+			if (!grunt.util._.every(grunt.util._.keys(options.params), 
+				function(key) { return grunt.util._.contains(put_params, key); })) {
+
+				grunt.warn("params can only be " + put_params.join(', '));
+			}
+		}
+
 		var s3 = new AWS.S3({accessKeyId: options.accessKeyId, secretAccessKey: options.secretAccessKey, region: options.region});
-		var s3_object = {Bucket: options.bucket, ACL: options.access};
+		var s3_object = grunt.util._.extend({Bucket: options.bucket, ACL: options.access}, options.params);
 
 		var dest;
 		var isExpanded;
@@ -69,8 +82,7 @@ module.exports = function(grunt) {
 			var upload;
 
 			if (grunt.file.isDir(task.src)) {
-				
-				if (!grunt.util._.endsWith(dest, '/')) {
+				if (!grunt.util._.endsWith(task.dest, '/')) {
 					task.dest = task.dest + '/';
 				}
 
@@ -98,7 +110,7 @@ module.exports = function(grunt) {
 			var objectURL = s3.endpoint.href + options.bucket + '/' + this.data.dest;
 
 			if (err) {
-				grunt.fatal('Failed to upload ' + this.data.src.toString().cyan + ' to ' + objectURL.toString().cyan);
+				grunt.fatal('Failed to upload ' + this.data.src.toString().cyan + ' to ' + objectURL.toString().cyan + ".\n" + err.toString().red);
 			}
 			else {
 				grunt.log.writeln(this.data.src.toString().cyan + ' uploaded to ' + objectURL.toString().cyan);
