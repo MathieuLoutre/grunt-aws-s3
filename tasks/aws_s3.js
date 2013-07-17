@@ -21,7 +21,8 @@ module.exports = function(grunt) {
 		var options = this.options({
 			access: 'public-read',
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+			concurrency: 1
 		});
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding', 
@@ -73,7 +74,11 @@ module.exports = function(grunt) {
 					dest = filePair.dest;
 				}
 
-				objects.push({src: src, dest: dest});
+				// '.' means that no dest path has been given (root).
+				// We do not need to create a '.' folder
+				if (dest !== '.') {
+					objects.push({src: src, dest: dest});
+				}
 			});
 		});
 
@@ -97,7 +102,7 @@ module.exports = function(grunt) {
 			s3.putObject(upload, function(err, data) {
 				callback(err);
 			});
-		}, 1);
+		}, options.concurrency);
 
 		queue.drain = function () {
 

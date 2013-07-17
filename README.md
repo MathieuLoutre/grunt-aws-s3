@@ -47,6 +47,12 @@ Default: 'public-read'
 
 The ACL you want to apply to ALL the files that will be uploaded. The ACL values can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property).
 
+#### options.concurrency
+Type: `Integer`
+Default: 1
+
+Number of uploads in parallel. By default, there's no concurrency, the uploads are made one after the other.
+
 #### options.params
 Type: `Object`
 
@@ -72,6 +78,7 @@ aws_s3: {
     accessKeyId: "<%= aws.AWSAccessKeyId %>", // Use the variables
     secretAccessKey: "<%= aws.AWSSecretKey %>", // You can also use env variables
     region: 'eu-west-1',
+    concurrency: 5 // 5 simultaneous upload
   },
   staging: {
     options: {
@@ -112,3 +119,4 @@ aws_s3: {
 * 2013-07-10   v0.1.0   First release
 * 2013-07-11   v0.1.1   Fix bug when using env variable
 * 2013-07-16   v0.2.0   Can set additional params
+* 2013-07-17   v0.3.0   Option for concurrency
