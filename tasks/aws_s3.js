@@ -38,12 +38,20 @@ module.exports = function(grunt) {
 			grunt.warn("Missing secretAccessKey in options");
 		}
 
-		if (!options.region) {
-			grunt.warn("Missing region in options");
-		}
-
 		if (!options.bucket) {
 			grunt.warn("Missing bucket in options");
+		}
+
+		var s3_options = {
+			bucket : options.bucket,
+			accessKeyId : options.accessKeyId,
+			secretAccessKey : options.secretAccessKey
+		};
+
+		if (!options.region) {
+			grunt.log.write("No region defined, uploading to US Standard\n");
+		} else {
+			s3_options.region = options.region;
 		}
 
 		if (options.params) {
@@ -54,7 +62,7 @@ module.exports = function(grunt) {
 			}
 		}
 
-		var s3 = new AWS.S3({accessKeyId: options.accessKeyId, secretAccessKey: options.secretAccessKey, region: options.region});
+    var s3 = new AWS.S3(s3_options);
 		var s3_object = grunt.util._.extend({Bucket: options.bucket, ACL: options.access}, options.params);
 
 		var dest;
