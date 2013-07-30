@@ -49,7 +49,7 @@ module.exports = function(grunt) {
 		};
 
 		if (!options.region) {
-			grunt.log.write("No region defined, uploading to US Standard\n");
+			grunt.log.writeln("No region defined, uploading to US Standard");
 		} else {
 			s3_options.region = options.region;
 		}

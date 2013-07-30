@@ -31,15 +31,16 @@ Type: `String`
 
 The AWS secretAccessKey. You can load it via JSON as shown in the example or use the `AWS_SECRET_ACCESS_KEY` environment variable.
 
-#### options.region
-Type: `String`
-
-The AWS region.
-
 #### options.bucket
 Type: `String`
 
 The AWS bucket name you want to upload to.
+
+#### options.region (optional)
+Type: `String`
+
+The AWS [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
+If not specified, it uploads to the default 'US Standard'
 
 #### options.access
 Type: `String`
@@ -120,3 +121,4 @@ aws_s3: {
 * 2013-07-11   v0.1.1   Fix bug when using env variable
 * 2013-07-16   v0.2.0   Can set additional params
 * 2013-07-17   v0.3.0   Option for concurrency
+* 2013-07-30   v0.3.1   Region is now optional, defaults to US Standard
