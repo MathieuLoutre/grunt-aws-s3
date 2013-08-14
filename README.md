@@ -19,6 +19,34 @@ grunt.loadNpmTasks('grunt-aws-s3');
 
 ## The "aws_s3" task
 
+### Actions
+
+This Grunt task supports two modes of interaction with S3, `upload` and `delete`.
+
+You choose the action by specifying the key `action` in the file hash like so:
+
+```js
+  {expand: true, cwd: "dist/staging/scripts", src: ['**'], dest: 'app/scripts', 'action': 'upload'}
+```
+
+By default, the action is `upload`.
+
+The `delete` action just requires a `dest`, no need for a `dest` like so:
+
+```js
+  {dest: 'app/', 'action': 'delete'}
+```
+
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
+
+If you specify '/', the whole bucket will be wiped (with the limit of 1000 objects, so may need to run it twice if you have lots of objects in your bucket).
+
+If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
+
+You can put a `delete` action in a separate target or in the same target as your upload. However, if you put it in the same target, changing the concurrency might cause mix-ups. 
+
+Please, be careful with the `delete` action. It doesn't forgive.
+
 ### Options
 
 #### options.accessKeyId
@@ -40,17 +68,18 @@ The AWS bucket name you want to upload to.
 Type: `String`
 
 The AWS [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
+
 If not specified, it uploads to the default 'US Standard'
 
 #### options.access
-Type: `String`
-Default: 'public-read'
+Type: `String`  
+Default:`public-read`
 
 The ACL you want to apply to ALL the files that will be uploaded. The ACL values can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property).
 
 #### options.concurrency
-Type: `Integer`
-Default: 1
+Type: `Integer`  
+Default: `1`
 
 Number of uploads in parallel. By default, there's no concurrency, the uploads are made one after the other.
 
@@ -83,11 +112,13 @@ aws_s3: {
   },
   staging: {
     options: {
-      bucket: 'my-wonderful-staging-bucket'
+      bucket: 'my-wonderful-staging-bucket',
+      concurrency: 1 // Avoid problems with uploading and deleting simultaneously
     },
     files: [
       {expand: true, cwd: "dist/staging/scripts", src: ['**'], dest: 'app/scripts'},
       {expand: true, cwd: "dist/staging/styles", src: ['**'], dest: 'app/styles'},
+      {dest: 'src/app', action: 'delete'},
     ]
   },
   production: {
@@ -99,6 +130,14 @@ aws_s3: {
     },
     files: [
       {expand: true, cwd: "dist/production", src: ['**'], dest: 'app/'},
+    ]
+  },
+  clean_production: {
+    options: {
+      bucket: 'my-wonderful-production-bucket'
+    },
+    files: [
+      {dest: 'app/', action: 'delete'},
     ]
   },
   secret: {
@@ -122,3 +161,4 @@ aws_s3: {
 * 2013-07-16   v0.2.0   Can set additional params
 * 2013-07-17   v0.3.0   Option for concurrency
 * 2013-07-30   v0.3.1   Region is now optional, defaults to US Standard
+* 2013-08-14   v0.4.0   Add 'delete' option
