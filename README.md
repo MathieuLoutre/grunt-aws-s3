@@ -26,7 +26,7 @@ This Grunt task supports two modes of interaction with S3, `upload` and `delete`
 You choose the action by specifying the key `action` in the file hash like so:
 
 ```js
-  {expand: true, cwd: "dist/staging/scripts", src: ['**'], dest: 'app/scripts', 'action': 'upload'}
+  {'action': 'upload', expand: true, cwd: "dist/js", src: ['**'], dest: 'app/js'}
 ```
 
 By default, the action is `upload`.
@@ -162,3 +162,4 @@ aws_s3: {
 * 2013-07-17   v0.3.0   Option for concurrency
 * 2013-07-30   v0.3.1   Region is now optional, defaults to US Standard
 * 2013-08-14   v0.4.0   Add 'delete' option
+* 2013-08-19   v0.4.1   Fix delete task executing separately from upload
