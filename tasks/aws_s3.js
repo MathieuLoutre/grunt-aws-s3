@@ -23,7 +23,8 @@ module.exports = function (grunt) {
 			access: 'public-read',
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-			concurrency: 1
+			concurrency: 1,
+			mime: {}
 		});
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding', 
@@ -151,8 +152,8 @@ module.exports = function (grunt) {
 				};
 			}
 			else {
-				
-				var type = mime.lookup(task.src);
+
+				var type = options.mime[task.src] || mime.lookup(task.src);
 				var buffer = grunt.file.read(task.src, {encoding: null});
 				
 				upload = {

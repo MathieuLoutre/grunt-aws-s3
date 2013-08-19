@@ -88,6 +88,21 @@ Type: `Object`
 
 A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to all the files in the target.
 
+#### options.mime
+Type: `Object`
+
+The MIME type of every file is determined by a MIME lookup using [node-mime](https://github.com/broofa/node-mime). If you want to override it, you can use this option object.
+The keys are the file paths and the values are the MIME types.
+
+```JSON
+  {
+    "path/to/file": "application/json",
+    "path to/other/file": "application/gzip"
+  }
+```
+
+You need to specify the full path of the file, including the 'cwd' part.
+
 ### Usage Examples
 
 #### Default Options
