@@ -180,10 +180,11 @@ module.exports = function (grunt) {
 		}, options.concurrency);
 
 		queue.drain = function () {
-
 			var tally = grunt.util._.groupBy(objects, 'action')
 
-			grunt.log.writeln('\n' + tally.upload.length.toString().green + ' objects uploaded on the bucket ' + options.bucket.toString().green);
+			if (tally.upload) {
+				grunt.log.writeln('\n' + tally.upload.length.toString().green + ' objects uploaded on the bucket ' + options.bucket.toString().green);				
+			}
 
 			grunt.util._.each(tally['delete'], function (del) {
 				grunt.log.writeln(del.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + del.dest).toString().green);
