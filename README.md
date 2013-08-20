@@ -49,23 +49,24 @@ Please, be careful with the `delete` action. It doesn't forgive.
 
 ### Options
 
-#### options.accessKeyId
+#### options.accessKeyId (required)
 Type: `String`
 
 The AWS accessKeyId. You can load it via JSON as shown in the example or use the `AWS_ACCESS_KEY_ID` environment variable.
 
-#### options.secretAccessKey
+#### options.secretAccessKey (required)
 Type: `String`
 
 The AWS secretAccessKey. You can load it via JSON as shown in the example or use the `AWS_SECRET_ACCESS_KEY` environment variable.
 
-#### options.bucket
+#### options.bucket (required)
 Type: `String`
 
 The AWS bucket name you want to upload to.
 
-#### options.region (optional)
-Type: `String`
+#### options.region
+Type: `String`  
+Default: `US Standard`
 
 The AWS [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region).
 
@@ -86,7 +87,7 @@ Number of uploads in parallel. By default, there's no concurrency, the uploads a
 #### options.params
 Type: `Object`
 
-A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to all the files in the target.
+A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to *all* the files in the target.
 
 #### options.mime
 Type: `Object`
@@ -178,3 +179,4 @@ aws_s3: {
 * 2013-07-30   v0.3.1   Region is now optional, defaults to US Standard
 * 2013-08-14   v0.4.0   Add 'delete' option
 * 2013-08-19   v0.4.1   Fix delete task executing separately from upload
+* 2013-08-20   v0.5.0   Add option to override automatic MIME type detection
