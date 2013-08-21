@@ -15,7 +15,7 @@ var mime = require('mime');
 
 module.exports = function (grunt) {
 
-	grunt.registerMultiTask('aws_s3', 'Upload files to AWS S3', function() {
+	grunt.registerMultiTask('aws_s3', 'Upload files to AWS S3', function () {
 		
 		var done = this.async();
 
@@ -24,13 +24,19 @@ module.exports = function (grunt) {
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 			concurrency: 1,
-			mime: {}
+			downloadConcurrency: 1,
+			mime: {},
+			params: {}
 		});
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding', 
 		'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl', 
 		'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 
-		'StorageClass', 'WebsiteRedirectLocation'];
+		'StorageClass', 'WebsiteRedirectLocation', 'ContentType'];
+
+		var isValidParams = function (params) {
+			return grunt.util._.every(grunt.util._.keys(params), function(key) { return grunt.util._.contains(put_params, key); });
+		}
 		
 		if (!options.accessKeyId) {
 			grunt.warn("Missing accessKeyId in options");
@@ -57,11 +63,8 @@ module.exports = function (grunt) {
 		}
 
 		if (options.params) {
-			
-			if (!grunt.util._.every(grunt.util._.keys(options.params), 
-				function(key) { return grunt.util._.contains(put_params, key); })) {
-
-				grunt.warn("params can only be " + put_params.join(', '));
+			if (!isValidParams(options.params)) {
+				grunt.warn('"params" can only be ' + put_params.join(', ').toString().orange);
 			}
 		}
 
@@ -72,7 +75,7 @@ module.exports = function (grunt) {
 		var objects = [];
 
 		this.files.forEach(function (filePair) {
-			
+
 			if (filePair.action === 'delete') {
 
 				if (!filePair.dest) {
@@ -80,45 +83,67 @@ module.exports = function (grunt) {
 				}
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({dest: dest, action: 'delete'})
+				objects.push({dest: dest, action: 'delete'});
 			}
-			else {
+			else if (filePair.action === 'download') {
 
 				isExpanded = filePair.orig.expand || false;
 
-				filePair.src.forEach(function (src) {
-					
-					if (grunt.util._.endsWith(dest, '/')) {	
-						dest = (isExpanded) ? filePair.dest : unixifyPath(path.join(filePair.dest, src));
-					} 
-					else {
-						dest = filePair.dest;
-					}
+				if (isExpanded) {
+					grunt.fatal('You cannot expand the "src" for a download');
+				}
+				else if (!filePair.dest) {
+					grunt.fatal('No "dest" specified for download');
+				}
+				else if (!filePair.cwd || filePair.src) {
+					grunt.fatal('Specify a "cwd" but not a "src"');
+				}
 
-					// '.' means that no dest path has been given (root).
-					// We do not need to create a '.' folder
-					if (dest !== '.') {
-						objects.push({src: src, dest: dest, action: 'upload'});
-					}
-				});
+				dest = (filePair.dest === '/') ? '' : filePair.dest;
+				objects.push({src: filePair.cwd, dest: dest, action: 'download'});
+			}
+			else {
+
+				if (filePair.params && !isValidParams(filePair.params)) {
+					grunt.warn('"params" can only be ' + put_params.join(', ').toString().orange);
+				}
+				else {
+
+					isExpanded = filePair.orig.expand || false;
+
+					filePair.src.forEach(function (src) {
+
+						// Prevent creating empty folders
+						if (!grunt.file.isDir(src)) {
+
+							if (grunt.util._.endsWith(dest, '/')) {	
+								dest = (isExpanded) ? filePair.dest : unixifyPath(path.join(filePair.dest, src));
+							} 
+							else {
+								dest = filePair.dest;
+							}
+
+							// '.' means that no dest path has been given (root).
+							// We do not need to create a '.' folder
+							if (dest !== '.') {
+								objects.push({src: src, dest: dest, action: 'upload', params: grunt.util._.defaults(filePair.params || {}, options.params)});
+							}
+						}
+					});
+				}
 			}
 		});
 
 		var deleteObjects = function (task, callback) {
-			
-			var clear = {
-				Prefix: task.dest, 
-				Bucket: options.bucket
-			};
 
-			s3.listObjects(clear, function (err, data) {
+			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, data) {
 
 				if (!err) {
 
 					if (data.Contents.length > 0) {
 
 						var to_delete = {
-							Objects: grunt.util._.map(data.Contents, function (o) { return {Key: o.Key} })
+							Objects: grunt.util._.map(data.Contents, function (o) { return {Key: o.Key}; })
 						};
 
 						s3.deleteObjects({Delete: to_delete, Bucket: options.bucket}, function (err, data) {
@@ -126,54 +151,87 @@ module.exports = function (grunt) {
 						});
 					}
 					else {
-						callback(null, null)
+						callback(null, null);
 					}
 				}
 				else {
 					callback(err);
 				}
 			});
-		}
+		};
+
+		var downloadObjects = function (task, callback) {
+			
+			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, data) {
+
+				if (!err) {
+
+					if (data.Contents.length > 0) {
+
+						var list = grunt.util._.pluck(data.Contents, 'Key');
+
+						var download_queue = grunt.util.async.queue(function (object, downloadCallback) {
+							
+							s3.getObject(object, function (err, data) {
+
+								if (err) {
+									downloadCallback(err);
+								}
+								else {
+									grunt.file.write(task.src + object.Key, data.Body);
+									downloadCallback(null);
+								}
+							});
+						}, options.downloadConcurrency);
+
+						download_queue.drain = function () {
+							callback(null, list);
+						};
+
+						var to_download = grunt.util._.map(data.Contents, function (o) { return {Key: o.Key, Bucket: options.bucket}; });
+						
+						download_queue.push(to_download, function (err) {
+							
+							if (err) {
+								grunt.fatal('Failed to download ' + s3.endpoint.href + options.bucket + '/' + this.data.Key);
+							}
+						});
+					}
+					else {
+						callback(null, null);
+					}
+				}
+				else {
+					callback(err);
+				}
+			});
+		};
 
 		var uploadObject = function (task, callback) {
+
+			var type = options.mime[task.src] || task.params.ContentType || mime.lookup(task.src);
+			var buffer = grunt.file.read(task.src, {encoding: null});
 			
-			var upload;
-
-			if (grunt.file.isDir(task.src)) {
-				
-				if (!grunt.util._.endsWith(task.dest, '/')) {
-					task.dest = task.dest + '/';
-				}
-
-				upload = {
-					Key: task.dest, 
-					Bucket: options.bucket, 
-					ACL: options.access
-				};
-			}
-			else {
-
-				var type = options.mime[task.src] || mime.lookup(task.src);
-				var buffer = grunt.file.read(task.src, {encoding: null});
-				
-				upload = {
-					ContentType: type, 
-					Body: buffer, 
-					Key: task.dest, 
-					Bucket: options.bucket, 
-					ACL: options.access
-				};
-			}
+			var upload = grunt.util._.defaults({
+				ContentType: type, 
+				Body: buffer, 
+				Key: task.dest, 
+				Bucket: options.bucket, 
+				ACL: options.access
+			}, task.params);
 
 			s3.putObject(upload, function (err, data) {
 				callback(err, data);
 			});
-		}
+		};
 
 		var queue = grunt.util.async.queue(function (task, callback) {
 			
 			if (task.action === 'delete') {
 				deleteObjects(task, callback);
+			}
+			else if (task.action === 'download') {
+				downloadObjects(task, callback);
 			}
 			else {
 				uploadObject(task, callback);
@@ -181,11 +239,17 @@ module.exports = function (grunt) {
 		}, options.concurrency);
 
 		queue.drain = function () {
-			var tally = grunt.util._.groupBy(objects, 'action')
+			var tally = grunt.util._.groupBy(objects, 'action');
+
+			grunt.log.writeln();
 
 			if (tally.upload) {
-				grunt.log.writeln('\n' + tally.upload.length.toString().green + ' objects uploaded on the bucket ' + options.bucket.toString().green);				
+				grunt.log.writeln(tally.upload.length.toString().green + ' objects uploaded on the bucket ' + options.bucket.toString().green);				
 			}
+
+			grunt.util._.each(tally.download, function (download) {
+				grunt.log.writeln(download.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + download.dest).toString().green + ' to ' + download.src.toString().green);			
+			});
 
 			grunt.util._.each(tally['delete'], function (del) {
 				grunt.log.writeln(del.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + del.dest).toString().green);
@@ -221,10 +285,28 @@ module.exports = function (grunt) {
 					}
 				}
 			}
+			else if (this.data.action === 'download') {
+
+				if (err) {
+					grunt.fatal('Failed to download content of ' + objectURL + '\n' + err);
+				}
+				else {
+
+					if (res) {
+						grunt.log.writeln('Successfuly downloaded the content of ' + objectURL.toString().cyan + ' to ' + this.data.src.toString().cyan);
+						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects): ' + res.join(', ').toString().cyan);
+						this.data.nb_objects = res.length;
+					}
+					else {
+						grunt.log.writeln('Nothing to download in ' + objectURL.toString().cyan);
+						this.data.nb_objects = 0;
+					}
+				}
+			}
 			else {
 				
 				if (err) {
-					grunt.fatal('Failed to upload ' + this.data.src.toString().cyan + ' to ' + objectURL.toString().cyan + ".\n" + err.toString().red);
+					grunt.fatal('Failed to upload ' + this.data.src + ' to ' + objectURL + '\n' + err.toString());
 				}
 				else {
 					grunt.log.writeln(this.data.src.toString().cyan + ' uploaded to ' + objectURL.toString().cyan);
