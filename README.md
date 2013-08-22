@@ -189,7 +189,6 @@ Please, be careful with the `delete` action. It doesn't forgive.
 
 ### Usage Examples
 
-#### Default Options
 The example loads the AWS credentials from a JSON file (DO NOT forget to exclude it from your commits).
 
 ```JSON
