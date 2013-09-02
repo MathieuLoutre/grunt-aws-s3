@@ -28,6 +28,7 @@ module.exports = function (grunt) {
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 			concurrency: 1,
+			uploadConcurrency: null,
 			downloadConcurrency: 1,
 			mime: {},
 			params: {}
@@ -245,7 +246,7 @@ module.exports = function (grunt) {
 					uploadCallback(err, data);
 				});
 
-			}, options.concurrency);
+			}, options.uploadConcurrency || options.concurrency);
 
 			upload_queue.drain = function () {
 				callback(null, task.files, 'src');
@@ -343,7 +344,7 @@ module.exports = function (grunt) {
 				else {
 					grunt.log.writeln('Successfuly uploaded to ' + objectURL.toString().cyan);
 					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
-					
+
 					grunt.util._.each(res, function (file) {
 						grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
 					});
