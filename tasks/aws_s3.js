@@ -6,6 +6,10 @@
  * Licensed under the MIT license.
  */
 
+ // TODO:
+ // Tests
+ // Sync
+
 'use strict';
 
 var path = require('path');
@@ -29,9 +33,9 @@ module.exports = function (grunt) {
 			params: {}
 		});
 
-		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding', 
-		'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl', 
-		'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption', 
+		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding',
+		'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl',
+		'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption',
 		'StorageClass', 'WebsiteRedirectLocation', 'ContentType'];
 
 		var isValidParams = function (params) {
@@ -51,9 +55,9 @@ module.exports = function (grunt) {
 		}
 
 		var s3_options = {
-			bucket : options.bucket,
-			accessKeyId : options.accessKeyId,
-			secretAccessKey : options.secretAccessKey
+			bucket: options.bucket,
+			accessKeyId: options.accessKeyId,
+			secretAccessKey: options.secretAccessKey
 		};
 
 		if (!options.region) {
@@ -73,6 +77,7 @@ module.exports = function (grunt) {
 		var dest;
 		var isExpanded;
 		var objects = [];
+		var uploads = [];
 
 		this.files.forEach(function (filePair) {
 
@@ -80,6 +85,11 @@ module.exports = function (grunt) {
 
 				if (!filePair.dest) {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
+				}
+
+				if (uploads.length > 0) {
+					objects.push({action: 'upload', files: uploads});
+					uploads = [];
 				}
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
@@ -99,6 +109,11 @@ module.exports = function (grunt) {
 					grunt.fatal('Specify a "cwd" but not a "src"');
 				}
 
+				if (uploads.length > 0) {
+					objects.push({action: 'upload', files: uploads});
+					uploads = [];
+				}
+
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
 				objects.push({src: filePair.cwd, dest: dest, action: 'download'});
 			}
@@ -116,7 +131,7 @@ module.exports = function (grunt) {
 						// Prevent creating empty folders
 						if (!grunt.file.isDir(src)) {
 
-							if (grunt.util._.endsWith(dest, '/')) {	
+							if (grunt.util._.endsWith(dest, '/')) {
 								dest = (isExpanded) ? filePair.dest : unixifyPath(path.join(filePair.dest, src));
 							} 
 							else {
@@ -126,13 +141,17 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root).
 							// We do not need to create a '.' folder
 							if (dest !== '.') {
-								objects.push({src: src, dest: dest, action: 'upload', params: grunt.util._.defaults(filePair.params || {}, options.params)});
+								uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
 							}
 						}
 					});
 				}
 			}
 		});
+
+		if (uploads.length > 0) {
+			objects.push({action: 'upload', files: uploads});
+		}
 
 		var deleteObjects = function (task, callback) {
 
@@ -193,7 +212,7 @@ module.exports = function (grunt) {
 						download_queue.push(to_download, function (err) {
 							
 							if (err) {
-								grunt.fatal('Failed to download ' + s3.endpoint.href + options.bucket + '/' + this.data.Key);
+								grunt.fatal('Failed to download ' + s3.endpoint.href + options.bucket + '/' + this.data.Key + '\n' + err);
 							}
 						});
 					}
@@ -207,21 +226,36 @@ module.exports = function (grunt) {
 			});
 		};
 
-		var uploadObject = function (task, callback) {
+		var uploadObjects = function (task, callback) {
 
-			var type = options.mime[task.src] || task.params.ContentType || mime.lookup(task.src);
-			var buffer = grunt.file.read(task.src, {encoding: null});
-			
-			var upload = grunt.util._.defaults({
-				ContentType: type, 
-				Body: buffer, 
-				Key: task.dest, 
-				Bucket: options.bucket, 
-				ACL: options.access
-			}, task.params);
+			var upload_queue = grunt.util.async.queue(function (object, uploadCallback) {
+				
+				var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
+				var buffer = grunt.file.read(object.src, {encoding: null});
+				
+				var upload = grunt.util._.defaults({
+					ContentType: type,
+					Body: buffer,
+					Key: object.dest,
+					Bucket: options.bucket,
+					ACL: options.access
+				}, object.params);
 
-			s3.putObject(upload, function (err, data) {
-				callback(err, data);
+				s3.putObject(upload, function (err, data) {
+					uploadCallback(err, data);
+				});
+
+			}, options.concurrency);
+
+			upload_queue.drain = function () {
+				callback(null, grunt.util._.pluck(task.files, 'src'));
+			};
+
+			upload_queue.push(task.files, function (err) {
+
+				if (err) {
+					grunt.fatal('Failed to upload ' + this.data.src + ' to bucket ' + options.bucket + '\n' + err);
+				}
 			});
 		};
 
@@ -234,33 +268,31 @@ module.exports = function (grunt) {
 				downloadObjects(task, callback);
 			}
 			else {
-				uploadObject(task, callback);
+				uploadObjects(task, callback);
 			}
-		}, options.concurrency);
+		}, 1);
 
 		queue.drain = function () {
-			var tally = grunt.util._.groupBy(objects, 'action');
 
-			grunt.log.writeln();
+			grunt.util._.each(objects, function (o) {
 
-			if (tally.upload) {
-				grunt.log.writeln(tally.upload.length.toString().green + ' objects uploaded on the bucket ' + options.bucket.toString().green);				
-			}
-
-			grunt.util._.each(tally.download, function (download) {
-				grunt.log.writeln(download.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + download.dest).toString().green + ' to ' + download.src.toString().green);			
-			});
-
-			grunt.util._.each(tally['delete'], function (del) {
-				grunt.log.writeln(del.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + del.dest).toString().green);
-			});
+				if (o.action === "upload") {
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket).toString().green);
+				}
+				else if (o.action === "download") {
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.src.toString().green);
+				}
+				else {
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + o.dest).toString().green);
+				}
+			})
 
 			done();
 		};
 
 		queue.push(objects, function (err, res) {
 
-			var objectURL = s3.endpoint.href + options.bucket + '/' + this.data.dest;
+			var objectURL = s3.endpoint.href + options.bucket + '/' + (this.data.dest || '');
 
 			if (this.data.action === 'delete') {
 				
@@ -288,7 +320,7 @@ module.exports = function (grunt) {
 			else if (this.data.action === 'download') {
 
 				if (err) {
-					grunt.fatal('Failed to download content of ' + objectURL + '\n' + err);
+					grunt.fatal('Failed to download content of ' + objectURL + '\n' + err.toString());
 				}
 				else {
 
@@ -306,12 +338,16 @@ module.exports = function (grunt) {
 			else {
 				
 				if (err) {
-					grunt.fatal('Failed to upload ' + this.data.src + ' to ' + objectURL + '\n' + err.toString());
+					grunt.fatal('Failed to upload to ' + objectURL + '\n' + err.toString());
 				}
 				else {
-					grunt.log.writeln(this.data.src.toString().cyan + ' uploaded to ' + objectURL.toString().cyan);
+					grunt.log.writeln('Successfuly uploaded to ' + objectURL.toString().cyan);
+					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects): ' + res.join(', ').toString().cyan);
+					this.data.nb_objects = res.length;
 				}
 			}
+
+			grunt.log.writeln();
 		});
 	});
 
