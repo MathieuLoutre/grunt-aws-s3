@@ -248,7 +248,7 @@ module.exports = function (grunt) {
 			}, options.concurrency);
 
 			upload_queue.drain = function () {
-				callback(null, grunt.util._.pluck(task.files, 'src'));
+				callback(null, task.files, 'src');
 			};
 
 			upload_queue.push(task.files, function (err) {
@@ -342,7 +342,12 @@ module.exports = function (grunt) {
 				}
 				else {
 					grunt.log.writeln('Successfuly uploaded to ' + objectURL.toString().cyan);
-					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects): ' + res.join(', ').toString().cyan);
+					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
+					
+					grunt.util._.each(res, function (file) {
+						grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
+					});
+
 					this.data.nb_objects = res.length;
 				}
 			}
