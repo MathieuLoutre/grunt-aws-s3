@@ -31,7 +31,8 @@ module.exports = function (grunt) {
 			uploadConcurrency: null,
 			downloadConcurrency: 1,
 			mime: {},
-			params: {}
+			params: {},
+			debug: false
 		});
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding',
@@ -41,7 +42,7 @@ module.exports = function (grunt) {
 
 		var isValidParams = function (params) {
 			return grunt.util._.every(grunt.util._.keys(params), function(key) { return grunt.util._.contains(put_params, key); });
-		}
+		};
 		
 		if (!options.accessKeyId) {
 			grunt.warn("Missing accessKeyId in options");
@@ -160,7 +161,10 @@ module.exports = function (grunt) {
 
 				if (!err) {
 
-					if (data.Contents.length > 0) {
+					if (options.debug) {
+						callback(null, {Deleted: data.Contents});
+					}
+					else if (data.Contents.length > 0) {
 
 						var to_delete = {
 							Objects: grunt.util._.map(data.Contents, function (o) { return {Key: o.Key}; })
@@ -192,16 +196,21 @@ module.exports = function (grunt) {
 
 						var download_queue = grunt.util.async.queue(function (object, downloadCallback) {
 							
-							s3.getObject(object, function (err, data) {
+							if (options.debug) {
+								downloadCallback(null);
+							}
+							else {
+								s3.getObject(object, function (err, data) {
 
-								if (err) {
-									downloadCallback(err);
-								}
-								else {
-									grunt.file.write(task.src + object.Key, data.Body);
-									downloadCallback(null);
-								}
-							});
+									if (err) {
+										downloadCallback(err);
+									}
+									else {
+										grunt.file.write(task.src + object.Key, data.Body);
+										downloadCallback(null);
+									}
+								});
+							}
 						}, options.downloadConcurrency);
 
 						download_queue.drain = function () {
@@ -242,9 +251,14 @@ module.exports = function (grunt) {
 					ACL: options.access
 				}, object.params);
 
-				s3.putObject(upload, function (err, data) {
-					uploadCallback(err, data);
-				});
+				if (options.debug) {
+					uploadCallback(null, null);
+				}
+				else {
+					s3.putObject(upload, function (err, data) {
+						uploadCallback(err, data);
+					});
+				}
 
 			}, options.uploadConcurrency || options.concurrency);
 
@@ -286,7 +300,7 @@ module.exports = function (grunt) {
 				else {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + o.dest).toString().green);
 				}
-			})
+			});
 
 			done();
 		};
