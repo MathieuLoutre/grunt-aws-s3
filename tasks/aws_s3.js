@@ -9,11 +9,13 @@
  // TODO:
  // Tests
  // Sync
+ // Continue lists over 1000 auto
 
 'use strict';
 
 var path = require('path');
 var fs = require('fs');
+var crypto = require('crypto');
 var AWS = require('aws-sdk');
 var mime = require('mime');
 
@@ -30,6 +32,7 @@ module.exports = function (grunt) {
 			concurrency: 1,
 			uploadConcurrency: null,
 			downloadConcurrency: 1,
+			syncConcurrency: 1,
 			mime: {},
 			params: {},
 			debug: false
@@ -80,6 +83,7 @@ module.exports = function (grunt) {
 		var isExpanded;
 		var objects = [];
 		var uploads = [];
+		var sync = [];
 
 		this.files.forEach(function (filePair) {
 
@@ -92,6 +96,10 @@ module.exports = function (grunt) {
 				if (uploads.length > 0) {
 					objects.push({action: 'upload', files: uploads});
 					uploads = [];
+				}
+				else if (sync.length > 0) {
+					objects.push({action: 'sync', files: sync});
+					sync = [];
 				}
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
@@ -114,6 +122,10 @@ module.exports = function (grunt) {
 				if (uploads.length > 0) {
 					objects.push({action: 'upload', files: uploads});
 					uploads = [];
+				}
+				else if (sync.length > 0) {
+					objects.push({action: 'sync', files: sync});
+					sync = [];
 				}
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
@@ -143,7 +155,13 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root).
 							// We do not need to create a '.' folder
 							if (dest !== '.') {
-								uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+
+								if (filePair.action && filePair.action === 'sync') {
+									sync.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+								}
+								else {
+									uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+								}
 							}
 						}
 					});
@@ -153,6 +171,9 @@ module.exports = function (grunt) {
 
 		if (uploads.length > 0) {
 			objects.push({action: 'upload', files: uploads});
+		}
+		else if (sync.length > 0) {
+			objects.push({action: 'sync', files: sync});
 		}
 
 		var deleteObjects = function (task, callback) {
@@ -274,6 +295,76 @@ module.exports = function (grunt) {
 			});
 		};
 
+		var syncObjects = function (task, callback) {
+
+			var sync_queue = grunt.util.async.queue(function (object, syncCallback) {
+				
+				s3.headObject({ Key: object.dest, Bucket: options.bucket}, function (err, data) {
+
+					if (!err || (err && err.statusCode === 404)) {
+
+						var need_upload = true;
+						var buffer = grunt.file.read(object.src, {encoding: null});
+
+						if (!err) {
+
+							var md5_hash = crypto.createHash('md5').update(buffer).digest('hex');
+
+							if (md5_hash === data.ETag) {
+								need_upload = false;
+							}
+							else {
+								var server_date = new Date(data.LastModified);
+								var stats = fs.statSync(object.src);
+								var local_date = new Date(stats.mtime);
+
+								if (local_date <= server_date) {
+									need_upload = false;
+								}
+							}
+						}
+
+						if (need_upload && !options.debug) {
+
+							var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
+							var upload = grunt.util._.defaults({
+								ContentType: type,
+								Body: buffer,
+								Key: object.dest,
+								Bucket: options.bucket,
+								ACL: options.access
+							}, object.params);
+
+							s3.putObject(upload, function (err, data) {
+								syncCallback(err, data);
+							});
+						}
+						else {
+							syncCallback(null, need_upload);
+						}
+					}
+					else {
+						syncCallback(err);
+					}
+				});
+
+			}, options.syncConcurrency);
+
+			sync_queue.drain = function () {
+				callback(null, task.files, 'src');
+			};
+
+			sync_queue.push(task.files, function (err, uploaded) {
+
+				if (err) {
+					grunt.fatal('Failed to sync ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
+				}
+				else {
+					this.data.uploaded = uploaded;
+				}
+			});
+		};
+
 		var queue = grunt.util.async.queue(function (task, callback) {
 			
 			if (task.action === 'delete') {
@@ -281,6 +372,9 @@ module.exports = function (grunt) {
 			}
 			else if (task.action === 'download') {
 				downloadObjects(task, callback);
+			}
+			else if (task.action === 'sync') {
+				syncObjects(task, callback);
 			}
 			else {
 				uploadObjects(task, callback);
@@ -296,6 +390,9 @@ module.exports = function (grunt) {
 				}
 				else if (o.action === "download") {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.src.toString().green);
+				}
+				else if (o.action === 'sync') {
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green);
 				}
 				else {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted at ' + (options.bucket + '/' + o.dest).toString().green);
@@ -321,7 +418,7 @@ module.exports = function (grunt) {
 				}
 				else {
 
-					if (res) {
+					if (res && res.Deleted.length > 0) {
 						grunt.log.writeln('Successfuly deleted the content of ' + objectURL.toString().cyan);
 						grunt.log.writeln('List: (' + res.Deleted.length.toString().cyan + ' objects): '+ grunt.util._.pluck(res.Deleted, 'Key').join(', ').toString().cyan);
 						this.data.nb_objects = res.Deleted.length;
@@ -339,7 +436,7 @@ module.exports = function (grunt) {
 				}
 				else {
 
-					if (res) {
+					if (res && res.length > 0) {
 						grunt.log.writeln('Successfuly downloaded the content of ' + objectURL.toString().cyan + ' to ' + this.data.src.toString().cyan);
 						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects): ' + res.join(', ').toString().cyan);
 						this.data.nb_objects = res.length;
@@ -348,6 +445,28 @@ module.exports = function (grunt) {
 						grunt.log.writeln('Nothing to download in ' + objectURL.toString().cyan);
 						this.data.nb_objects = 0;
 					}
+				}
+			}
+			else if (this.data.action === 'sync') {
+				
+				if (err) {
+					grunt.fatal('Failed to sync to ' + objectURL + '\n' + err.toString());
+				}
+				else {
+					grunt.log.writeln('Successfuly synchronised with ' + objectURL.toString().cyan);
+					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
+
+					grunt.util._.each(res, function (file) {
+						
+						if (file.uploaded) {
+							grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
+						}
+						else {
+							grunt.log.writeln('- ' + file.src.toString().yellow + ' === ' + (objectURL + file.dest).toString().yellow);
+						}
+					});
+
+					this.data.nb_objects = res.length;
 				}
 			}
 			else {
