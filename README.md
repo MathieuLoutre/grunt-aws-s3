@@ -267,7 +267,10 @@ aws_s3: {
 ```
 
 ## Todos
-- Mock options for actual unit testing
+- Tests
+- Sync
+- Continue lists over 1000 automatically
+- Optimize delta upload
 
 ## Release History
 * 2013-08-21   v0.6.0   Add 'download' option. Multiple fixes.
