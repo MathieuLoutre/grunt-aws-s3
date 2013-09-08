@@ -6,11 +6,6 @@
  * Licensed under the MIT license.
  */
 
- // TODO:
- // Tests
- // Sync
- // Continue lists over 1000 auto
-
 'use strict';
 
 var path = require('path');
@@ -178,17 +173,17 @@ module.exports = function (grunt) {
 
 		var deleteObjects = function (task, callback) {
 
-			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, data) {
+			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, list) {
 
 				if (!err) {
 
 					if (options.debug) {
-						callback(null, {Deleted: data.Contents});
+						callback(null, {Deleted: list.Contents});
 					}
 					else if (data.Contents.length > 0) {
 
 						var to_delete = {
-							Objects: grunt.util._.map(data.Contents, function (o) { return {Key: o.Key}; })
+							Objects: grunt.util._.map(list.Contents, function (o) { return {Key: o.Key}; })
 						};
 
 						s3.deleteObjects({Delete: to_delete, Bucket: options.bucket}, function (err, data) {
@@ -207,13 +202,11 @@ module.exports = function (grunt) {
 
 		var downloadObjects = function (task, callback) {
 			
-			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, data) {
+			s3.listObjects({Prefix: task.dest, Bucket: options.bucket}, function (err, list) {
 
 				if (!err) {
 
-					if (data.Contents.length > 0) {
-
-						var list = grunt.util._.pluck(data.Contents, 'Key');
+					if (list.Contents.length > 0) {
 
 						var download_queue = grunt.util.async.queue(function (object, downloadCallback) {
 							
@@ -235,10 +228,10 @@ module.exports = function (grunt) {
 						}, options.downloadConcurrency);
 
 						download_queue.drain = function () {
-							callback(null, list);
+							callback(null, grunt.util._.pluck(list.Contents, 'Key'));
 						};
 
-						var to_download = grunt.util._.map(data.Contents, function (o) { return {Key: o.Key, Bucket: options.bucket}; });
+						var to_download = grunt.util._.map(list.Contents, function (o) { return {Key: o.Key, Bucket: options.bucket}; });
 						
 						download_queue.push(to_download, function (err) {
 							
@@ -307,21 +300,9 @@ module.exports = function (grunt) {
 						var buffer = grunt.file.read(object.src, {encoding: null});
 
 						if (!err) {
-
+							
 							var md5_hash = crypto.createHash('md5').update(buffer).digest('hex');
-
-							if (md5_hash === data.ETag) {
-								need_upload = false;
-							}
-							else {
-								var server_date = new Date(data.LastModified);
-								var stats = fs.statSync(object.src);
-								var local_date = new Date(stats.mtime);
-
-								if (local_date <= server_date) {
-									need_upload = false;
-								}
-							}
+							need_upload = md5_hash !== data.ETag.replace(/"/g, '');
 						}
 
 						if (need_upload && !options.debug) {
