@@ -36,7 +36,7 @@ module.exports = function (grunt) {
 
 		// Replace the AWS SDK by the mock package if we're testing
 		if (options.mock) {
-			AWS = require('mock-aws-s3')
+			AWS = require('mock-aws-s3');
 		}
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding',
@@ -208,7 +208,7 @@ module.exports = function (grunt) {
 					grunt.fatal('Failed to list content of bucket ' + options.bucket + '\n' + err);
 				}
 			});
-		}
+		};
 
 		var deleteObjects = function (task, callback) {
 
@@ -243,20 +243,22 @@ module.exports = function (grunt) {
 								callback(null, deleted);
 							}
 						}
-					}
+					};
 
-					for (var i = 0; i < slices; i++) {
+					var deleteSlice = function (i) {
 
 						var start = 1000 * i;
 						var to_delete = {
-							Objects: grunt.util._.map(list.slice(start, start + 1000), function (o) { 
-								return { Key: o.Key }; 
-							})
+							Objects: grunt.util._.map(list.slice(start, start + 1000), function (o) { return { Key: o.Key }; })
 						};
 
 						s3.deleteObjects({Delete: to_delete, Bucket: options.bucket}, function (err, data) {
 							end(err, data);
 						});
+					};
+
+					for (var i = 0; i < slices; i++) {
+						deleteSlice(i);
 					}
 				}
 				else {
@@ -431,15 +433,19 @@ module.exports = function (grunt) {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket).toString().green);
 				}
 				else if (o.action === "download") {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket).toString().green + ' to ' + o.src.toString().green);
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.src.toString().green);
 				}
 				else if (o.action === 'sync') {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green + ' (' + o.uploaded.toString().green + ' uploads)');
 				}
 				else {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket).toString().green);
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket + '/' + o.dest).toString().green);
 				}
 			});
+
+			if (options.debug) {
+				grunt.log.writeln("\nThe debug option was enabled, no changes have actually been made".toString().yellow);
+			}
 
 			done();
 		};
@@ -503,7 +509,7 @@ module.exports = function (grunt) {
 					grunt.util._.each(res, function (file) {
 						
 						if (file.uploaded) {
-							uploaded++
+							uploaded++;
 							grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
 						}
 						else {
