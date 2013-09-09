@@ -23,6 +23,9 @@
   "engines": {
     "node": ">= 0.8.0"
   },
+  "script": {
+    "test": "grunt"
+  },
   "dependencies": {
     "aws-sdk": "~1.3.2",
     "mime": "~1.2.9"
