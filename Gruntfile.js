@@ -29,11 +29,11 @@ module.exports = function(grunt) {
         files: [
           {expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'first/'},
           {dest: '/', cwd: 'test/local/download/backup/', action: 'download'},
-          {dest: 'first/otters/mix/', action: 'delete'},
+          {dest: 'first/otters/updated/', action: 'delete'},
           {dest: 'punk/', action: 'delete'},
           {expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/'},
           {dest: 'otters/funk/', cwd: 'test/local/download/backup/', action: 'download'},
-          {expand: true, cwd: "test/local/upload/otters/mix/", src: ['**'], dest: 'second/', action: 'sync'},
+          {expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'second/', action: 'sync'},
         ]
       },
     },
