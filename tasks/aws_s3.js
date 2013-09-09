@@ -158,10 +158,18 @@ module.exports = function (grunt) {
 							if (dest !== '.') {
 
 								if (options.differential || filePair.differential) {
-									diff_uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+									diff_uploads.push({
+										src: src, 
+										dest: dest, 
+										params: grunt.util._.defaults(filePair.params || {}, options.params)
+									});
 								}
 								else {
-									uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+									uploads.push({
+										src: src, 
+										dest: dest, 
+										params: grunt.util._.defaults(filePair.params || {}, options.params)
+									});
 								}
 							}
 						}
@@ -241,7 +249,9 @@ module.exports = function (grunt) {
 
 						var start = 1000 * i;
 						var to_delete = {
-							Objects: grunt.util._.map(list.slice(start, start + 1000), function (o) { return {Key: o.Key}; })
+							Objects: grunt.util._.map(list.slice(start, start + 1000), function (o) { 
+								return { Key: o.Key }; 
+							})
 						};
 
 						s3.deleteObjects({Delete: to_delete, Bucket: options.bucket}, function (err, data) {
@@ -284,7 +294,13 @@ module.exports = function (grunt) {
 						callback(null, grunt.util._.pluck(list, 'Key'));
 					};
 
-					var to_download = grunt.util._.map(list, function (o) { return {Key: o.Key, Bucket: options.bucket}; });
+					var to_download = grunt.util._.map(list, function (o) { 
+						
+						return {
+							Key: o.Key, 
+							Bucket: options.bucket
+						}; 
+					});
 					
 					download_queue.push(to_download, function (err) {
 						
