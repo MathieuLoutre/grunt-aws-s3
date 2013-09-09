@@ -10,6 +10,10 @@
 
 module.exports = function(grunt) {
 
+  grunt.registerTask('create_bucket', 'creates the bucket folder', function() {
+    grunt.file.mkdir(__dirname + '/test/local/bucket');
+  });
+
   // Project configuration.
   grunt.initConfig({
 
@@ -18,13 +22,7 @@ module.exports = function(grunt) {
         options: {
           bucket: __dirname + '/test/local/bucket',
           concurrency: 1,
-          params: {
-            ContentType: 'application/json'
-          },
-          mime: {
-            'upload/me too/LICENSE': 'text/plain'
-          },
-          mock: true
+          mock: true,
         },
         files: [
           {expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'first/'},
@@ -33,7 +31,7 @@ module.exports = function(grunt) {
           {dest: 'punk/', action: 'delete'},
           {expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/'},
           {dest: 'otters/funk/', cwd: 'test/local/download/backup/', action: 'download'},
-          {expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'second/', action: 'sync'},
+          {expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'second/', differential: true},
         ]
       },
     },
@@ -66,6 +64,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
 
-  grunt.registerTask('default', ['clean', 'copy', 'aws_s3', 'mochaTest']);
+  grunt.registerTask('default', ['clean', 'copy', 'create_bucket', 'aws_s3', 'mochaTest']);
 
 };

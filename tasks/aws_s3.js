@@ -16,7 +16,7 @@ var mime = require('mime');
 
 module.exports = function (grunt) {
 
-	grunt.registerMultiTask('aws_s3', 'Upload files to AWS S3', function () {
+	grunt.registerMultiTask('aws_s3', 'Interact with AWS S3 using the AWS SDK', function () {
 		
 		var done = this.async();
 
@@ -30,7 +30,8 @@ module.exports = function (grunt) {
 			mime: {},
 			params: {},
 			debug: false,
-			mock: false
+			mock: false,
+			differential: false
 		});
 
 		// Replace the AWS SDK by the mock package if we're testing
@@ -39,12 +40,15 @@ module.exports = function (grunt) {
 		}
 
 		var put_params = ['CacheControl', 'ContentDisposition', 'ContentEncoding',
-		'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl',
-		'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption',
-		'StorageClass', 'WebsiteRedirectLocation', 'ContentType'];
+			'ContentLanguage', 'ContentLength', 'ContentMD5', 'Expires', 'GrantFullControl',
+			'GrantRead', 'GrantReadACP', 'GrantWriteACP', 'Metadata', 'ServerSideEncryption',
+			'StorageClass', 'WebsiteRedirectLocation', 'ContentType'];
 
 		var isValidParams = function (params) {
-			return grunt.util._.every(grunt.util._.keys(params), function (key) { return grunt.util._.contains(put_params, key); });
+			
+			return grunt.util._.every(grunt.util._.keys(params), function (key) { 
+				return grunt.util._.contains(put_params, key); 
+			});
 		};
 		
 		if (!options.accessKeyId && !options.mock) {
@@ -83,7 +87,7 @@ module.exports = function (grunt) {
 		var is_expanded;
 		var objects = [];
 		var uploads = [];
-		var sync = [];
+		var diff_uploads = [];
 
 		var pushFiles = function() {
 
@@ -91,9 +95,9 @@ module.exports = function (grunt) {
 				objects.push({action: 'upload', files: uploads});
 				uploads = [];
 			}
-			else if (sync.length > 0) {
-				objects.push({action: 'sync', files: sync});
-				sync = [];
+			else if (diff_uploads.length > 0) {
+				objects.push({action: 'sync', files: diff_uploads});
+				diff_uploads = [];
 			}
 		};
 
@@ -153,8 +157,8 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
 
-								if (filePair.action && filePair.action === 'sync') {
-									sync.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
+								if (options.differential || filePair.differential) {
+									diff_uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
 								}
 								else {
 									uploads.push({src: src, dest: dest, params: grunt.util._.defaults(filePair.params || {}, options.params)});
