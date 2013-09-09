@@ -108,11 +108,14 @@ module.exports = function (grunt) {
 				if (!filePair.dest) {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
 				}
+				else if ((filePair.differential || options.differential) && !filePair.cwd) {
+					grunt.fatal('Differential delete needs a "cwd"');
+				}
 
 				pushFiles();
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({dest: dest, action: 'delete', differential: filePair.differential || options.differential});
+				objects.push({dest: dest, action: 'delete', cwd: filePair.cwd, differential: filePair.differential || options.differential});
 			}
 			else if (filePair.action === 'download') {
 
@@ -214,10 +217,26 @@ module.exports = function (grunt) {
 
 			listObjects(task.dest, function (list) {
 
+				var to_delete = [];
+				var local_files = (task.differential) ? grunt.file.expand({cwd: task.cwd}, ["**"]) : [];
+
+				grunt.util._.each(list, function (o) {
+
+					var need_delete = true;
+
+					if (task.differential) {
+						need_delete = local_files.indexOf(o.Key) === -1;
+					}
+
+					if (need_delete) {
+						to_delete.push({ Key: o.Key, Bucket: options.bucket });
+					}
+				});
+
 				if (options.debug) {
-					callback(null, list);
+					callback(null, to_delete);
 				}
-				else if (list.length > 0) {
+				else if (to_delete.length > 0) {
 
 					var slices = Math.ceil(list.length/1000);
 					var errors = [];
@@ -248,11 +267,11 @@ module.exports = function (grunt) {
 					var deleteSlice = function (i) {
 
 						var start = 1000 * i;
-						var to_delete = {
+						var slice = {
 							Objects: grunt.util._.map(list.slice(start, start + 1000), function (o) { return { Key: o.Key }; })
 						};
 
-						s3.deleteObjects({Delete: to_delete, Bucket: options.bucket}, function (err, data) {
+						s3.deleteObjects({Delete: slice, Bucket: options.bucket}, function (err, data) {
 							end(err, data);
 						});
 					};
@@ -272,14 +291,13 @@ module.exports = function (grunt) {
 			listObjects(task.dest, function (list) {
 
 				var to_download = [];
+				var local_files = (task.differential) ? grunt.file.expand({cwd: task.cwd}, ["**"]) : [];
 
 				grunt.util._.each(list, function (o) {
 
 					var need_download = true;
 
 					if (task.differential) {
-
-						var local_files = grunt.file.expand({cwd: task.cwd}, ["**"]);
 						var local_index = local_files.indexOf(o.Key);
 
 						if (local_index !== -1) {
