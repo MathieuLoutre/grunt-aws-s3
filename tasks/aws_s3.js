@@ -150,8 +150,7 @@ module.exports = function (grunt) {
 								dest = filePair.dest;
 							}
 
-							// '.' means that no dest path has been given (root).
-							// We do not need to create a '.' folder
+							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
 
 								if (filePair.action && filePair.action === 'sync') {
@@ -362,7 +361,7 @@ module.exports = function (grunt) {
 						}, object.params);
 
 						s3.putObject(upload, function (err, data) {
-							syncCallback(err, data);
+							syncCallback(err, need_upload);
 						});
 					}
 					else {
@@ -415,7 +414,7 @@ module.exports = function (grunt) {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket).toString().green + ' to ' + o.src.toString().green);
 				}
 				else if (o.action === 'sync') {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green);
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green + ' (' + o.uploaded.toString().green + ' uploads)');
 				}
 				else {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket).toString().green);
@@ -437,7 +436,7 @@ module.exports = function (grunt) {
 						grunt.log.writeln('Errors (' + res.length.toString().red + ' objects): ' + grunt.util._.pluck(res, 'Key').join(', ').toString().red);
 					}
 
-					grunt.fatal('Failed to delete content of ' + objectURL + '\n' + err);
+					grunt.fatal('Failed to delete all content of ' + objectURL + '\n' + err);
 				}
 				else {
 
@@ -479,9 +478,12 @@ module.exports = function (grunt) {
 					grunt.log.writeln('Successfuly synchronised with ' + objectURL.toString().cyan);
 					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
 
+					var uploaded = 0;
+
 					grunt.util._.each(res, function (file) {
 						
 						if (file.uploaded) {
+							uploaded++
 							grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
 						}
 						else {
@@ -490,6 +492,7 @@ module.exports = function (grunt) {
 					});
 
 					this.data.nb_objects = res.length;
+					this.data.uploaded = uploaded;
 				}
 			}
 			else {

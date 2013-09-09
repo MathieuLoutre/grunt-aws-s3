@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     aws_s3: {
       test: {
         options: {
-          bucket: __dirname + '/test/local/buckets/otters',
+          bucket: __dirname + '/test/local/bucket',
           concurrency: 1,
           params: {
             ContentType: 'application/json'
@@ -27,18 +27,13 @@ module.exports = function(grunt) {
           mock: true
         },
         files: [
-          {expand: true, cwd: "test/local/upload/", src: ['**']},
-          {dest: '/', cwd: 'test/local/download/', action: 'download'},
-          {dest: '/', action: 'delete'},
+          {expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'first/'},
+          {dest: '/', cwd: 'test/local/download/backup/', action: 'download'},
+          {dest: 'first/otters/mix/', action: 'delete'},
           {dest: 'punk/', action: 'delete'},
-          {expand: true, cwd: "test/local/upload/", src: ['me/*']},
-          {dest: '/', action: 'delete'},
-          {expand: true, cwd: "test/local/upload/", src: ['**'], params: {CacheControl: "2000"}},
-          {dest: '/', cwd: 'test/local/download/', action: 'download'},
-          {dest: 'punk/', cwd: 'test/local/download/', action: 'download'},
-          {expand: true, cwd: "test/local/upload/", src: ['**']},
-          {dest: '/', action: 'delete'},
-          {expand: true, cwd: "test/local/upload/", src: ['**'], action: 'sync'},
+          {expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/'},
+          {dest: 'otters/funk/', cwd: 'test/local/download/backup/', action: 'download'},
+          {expand: true, cwd: "test/local/upload/otters/mix/", src: ['**'], dest: 'second/', action: 'sync'},
         ]
       },
     },
