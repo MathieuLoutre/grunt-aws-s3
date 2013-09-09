@@ -54,17 +54,18 @@ Default:`public-read`
 
 The ACL you want to apply to ALL the files that will be uploaded. The ACL values can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property).
 
-#### options.concurrency
+#### options.uploadConcurrency
 Type: `Integer`  
 Default: `1`
 
-Number of actions (delete, upload, downloads that you have specified in the target) in parallel. By default, there's no concurrency, the actions are made one after the other.
+Number of uploads in parallel. By default, there's no concurrency. 
+Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible.
 
 #### options.downloadConcurrency
 Type: `Integer`  
 Default: `1`
 
-Number of download in parallel. By default, there's no concurrency. This differs from `options.concurrency` because you can have `options.concurrency` set to `1` to launch your uploads, then your downloads and still have `options.downloadConcurrency` set to `10` for a faster download action within the subtask.
+Number of download in parallel. By default, there's no concurrency.
 
 #### options.params
 Type: `Object`
@@ -87,9 +88,28 @@ The keys are the local file paths and the values are the MIME types.
 You need to specify the full path of the file, including the `cwd` part.  
 The `mime` hash has absolute priority over what has been set in `options.params` and the `params` option of the file list.
 
+#### options.differential
+Type: `Boolean`  
+Default: `false`
+
+At the moment this is only applicable for uploads. Enabling this option means that only files that have changed (the local md5 hash is different from the server one) will be uploaded. It can be enabled for the whole task or for specific files like so:
+
+```js
+  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], differential: true}
+```
+
+`listObjects` requests are made to list the content of the bucket and then each local file is compared to the server's ETag for this file.
+
+#### options.debug
+Type: `Boolean`  
+Default: `false`
+
+This will do a "dry run". It will not upload anything to S3 but you will get the full report just as you would in normal mode. Useful to check what will be changed on the server before actually doing it. `listObjects` requests will still be made to list the content of the bucket.
+
+
 ### Actions
 
-This Grunt task supports three modes of interaction with S3, `upload`, `download` and `delete`.
+This Grunt task supports three modes of interaction with S3, `upload`, `download` and `delete`. Every action that you specify is executed serially, one after the other. If multiple `upload` actions are one after the other, they will be grouped together.
 
 You choose the action by specifying the key `action` in the file hash like so:
 
@@ -165,9 +185,10 @@ The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
 The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
 The `cwd` is used as the root folder to write the downloaded files. The inner folder structure will be reproduced inside that folder.
 
-If you specify '/' for `dest`, the whole bucket will be downloaded (with the limit of 1000 objects, so may need to run it twice if you have lots of objects in your bucket).
+If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.
 
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
+
 
 #### `delete`
 
@@ -179,7 +200,7 @@ The `delete` action just requires a `dest`, no need for a `dest` like so:
 
 The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
 
-If you specify '/', the whole bucket will be wiped (with the limit of 1000 objects, so may need to run it twice if you have lots of objects in your bucket).
+If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.
 
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
@@ -206,12 +227,13 @@ aws_s3: {
     accessKeyId: '<%= aws.AWSAccessKeyId %>', // Use the variables
     secretAccessKey: '<%= aws.AWSSecretKey %>', // You can also use env variables
     region: 'eu-west-1',
-    concurrency: 5 // 5 simultaneous upload
+    uploadConcurrency: 5 // 5 simultaneous uploads
+    downloadConcurrency: 5 // 5 simultaneous downloads
   },
   staging: {
     options: {
       bucket: 'my-wonderful-staging-bucket',
-      concurrency: 1 // Avoid problems with uploading and deleting simultaneously
+      differential: true // Only uploads the files that have changed
     },
     files: [
       {dest: 'app/', cwd: 'backup/staging', action: 'download'},
@@ -240,6 +262,7 @@ aws_s3: {
   clean_production: {
     options: {
       bucket: 'my-wonderful-production-bucket'
+      debug: true // Doesn't actually delete but shows log
     },
     files: [
       {dest: 'app/', action: 'delete'},
@@ -268,9 +291,10 @@ aws_s3: {
 
 ## Todos
 
-- Better testing for sync
+- Better testing (params, sync, etc.)
 
 ## Release History
+* 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
 * 2013-08-21   v0.6.0   Add 'download' option. Multiple fixes.
 * 2013-08-20   v0.5.0   Add option to override automatic MIME type detection
 * 2013-08-19   v0.4.1   Fix delete task executing separately from upload

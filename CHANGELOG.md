@@ -1,5 +1,14 @@
 # CHANGELOG
 
+### v0.7.0
+
+- Grouping of uploads together (treated like `delete` and `download` action in the code)
+- Improved log
+- Debug option to do dry runs
+- Differntial upload based on MD5 checks (using S3's ETags)
+- Tests using `mock-aws-s3` to replace the AWS package during testing
+- Code restructure/formatting
+
 ### v0.6.0
 
 - Add 'download' option.

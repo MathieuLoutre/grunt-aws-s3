@@ -1,7 +1,7 @@
 {
   "name": "grunt-aws-s3",
   "description": "Interact with AWS S3 using the AWS SDK",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "homepage": "https://github.com/MathieuLoutre/grunt-aws-s3",
   "author": {
     "name": "Mathieu Triay",
@@ -41,6 +41,9 @@
     "grunt": "~0.4.0"
   },
   "keywords": [
-    "gruntplugin"
+    "gruntplugin",
+    "aws",
+    "s3",
+    "sdk"
   ]
 }
