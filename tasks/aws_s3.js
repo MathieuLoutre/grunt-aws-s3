@@ -95,10 +95,6 @@ module.exports = function (grunt) {
 				objects.push({action: 'upload', files: uploads});
 				uploads = [];
 			}
-			else if (diff_uploads.length > 0) {
-				objects.push({action: 'sync', files: diff_uploads});
-				diff_uploads = [];
-			}
 		};
 
 		this.files.forEach(function (filePair) {
@@ -160,20 +156,12 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
 
-								if (filePair.differential || options.differential) {
-									diff_uploads.push({
-										src: src, 
-										dest: dest, 
-										params: grunt.util._.defaults(filePair.params || {}, options.params)
-									});
-								}
-								else {
-									uploads.push({
-										src: src, 
-										dest: dest, 
-										params: grunt.util._.defaults(filePair.params || {}, options.params)
-									});
-								}
+								uploads.push({
+									src: src, 
+									dest: dest, 
+									params: grunt.util._.defaults(filePair.params || {}, options.params),
+									differential: filePair.differential || options.differential
+								});
 							}
 						}
 					});
@@ -302,21 +290,21 @@ module.exports = function (grunt) {
 
 						if (local_index !== -1) {
 
-							 var local_buffer = grunt.file.read(task.cwd + o.Key, {encoding: null})
-							 var md5_hash = '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"';
+							var local_buffer = grunt.file.read(task.cwd + o.Key, {encoding: null});
+							var md5_hash = '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"';
+							
+							if (md5_hash === o.ETag) {
+								need_download = false;
+							}
+							else {
 
-							 if (md5_hash === o.ETag) {
-							 	need_download = false;
-							 }
-							 else {
-
-							 	var local_date = new Date(fs.statSync(task.cwd + o.Key).mtime).getTime();
-							 	var server_date = new Date(o.LastModified).getTime();
-							 	
-							 	if (local_date > server_date) {
-							 		need_download = false;
-							 	}
-							 }
+								var local_date = new Date(fs.statSync(task.cwd + o.Key).mtime).getTime();
+								var server_date = new Date(o.LastModified).getTime();
+								
+								if (local_date > server_date) {
+									need_download = false;
+								}
+							}
 						}
 					}
 
@@ -365,54 +353,15 @@ module.exports = function (grunt) {
 
 		var uploadObjects = function (task, callback) {
 
-			var upload_queue = grunt.util.async.queue(function (object, uploadCallback) {
-				
-				var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
-				var buffer = grunt.file.read(object.src, {encoding: null});
+			var startUploads = function (objects) {
 
-				var upload = grunt.util._.defaults({
-					ContentType: type,
-					Body: buffer,
-					Key: object.dest,
-					Bucket: options.bucket,
-					ACL: options.access
-				}, object.params);
-
-				if (options.debug) {
-					uploadCallback(null, null);
-				}
-				else {
-					s3.putObject(upload, function (err, data) {
-						uploadCallback(err, data);
-					});
-				}
-
-			}, options.uploadConcurrency || options.concurrency);
-
-			upload_queue.drain = function () {
-				callback(null, task.files, 'src');
-			};
-
-			upload_queue.push(task.files, function (err) {
-
-				if (err) {
-					grunt.fatal('Failed to upload ' + this.data.src + ' to bucket ' + options.bucket + '\n' + err);
-				}
-			});
-		};
-
-		var syncObjects = function (task, callback) {
-
-			listObjects('', function (objects) {
-
-				var sync_queue = grunt.util.async.queue(function (object, syncCallback) {
+				var upload_queue = grunt.util.async.queue(function (object, uploadCallback) {
 
 					var need_upload = true;
 					var server_file = grunt.util._.where(objects, {Key: object.dest})[0];
 					var buffer = grunt.file.read(object.src, {encoding: null});
 
-					if (server_file) {
-
+					if (server_file && object.differential) {
 						var md5_hash = '"' + crypto.createHash('md5').update(buffer).digest('hex') + '"';
 						need_upload = md5_hash !== server_file.ETag;
 					}
@@ -429,30 +378,37 @@ module.exports = function (grunt) {
 						}, object.params);
 
 						s3.putObject(upload, function (err, data) {
-							syncCallback(err, need_upload);
+							uploadCallback(err, need_upload);
 						});
 					}
 					else {
-						syncCallback(null, need_upload);
+						uploadCallback(null, need_upload);
 					}
 
 				}, options.uploadConcurrency || options.concurrency);
 
-				sync_queue.drain = function () {
+				upload_queue.drain = function () {
 
-					callback(null, task.files, 'src');
+					callback(null, task.files);
 				};
 
-				sync_queue.push(task.files, function (err, uploaded) {
+				upload_queue.push(task.files, function (err, uploaded) {
 
 					if (err) {
-						grunt.fatal('Failed to sync ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
+						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
 					}
 					else {
 						this.data.uploaded = uploaded;
 					}
 				});
-			});
+			};
+
+			if (grunt.util._.some(task.files, function (o) { return o.differential })) {
+				listObjects('', function (objects) { startUploads(objects); });
+			}
+			else {
+				startUploads([]);
+			}
 		};
 
 		var queue = grunt.util.async.queue(function (task, callback) {
@@ -462,9 +418,6 @@ module.exports = function (grunt) {
 			}
 			else if (task.action === 'download') {
 				downloadObjects(task, callback);
-			}
-			else if (task.action === 'sync') {
-				syncObjects(task, callback);
 			}
 			else {
 				uploadObjects(task, callback);
@@ -476,13 +429,10 @@ module.exports = function (grunt) {
 			grunt.util._.each(objects, function (o) {
 
 				if (o.action === "upload") {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket).toString().green);
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket).toString().green + ' (' + o.uploaded.toString().green + ' uploads)');
 				}
 				else if (o.action === "download") {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.cwd.toString().green);
-				}
-				else if (o.action === 'sync') {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green + ' (' + o.uploaded.toString().green + ' uploads)');
 				}
 				else {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket + '/' + o.dest).toString().green);
@@ -541,13 +491,13 @@ module.exports = function (grunt) {
 					}
 				}
 			}
-			else if (this.data.action === 'sync') {
+			else {
 				
 				if (err) {
-					grunt.fatal('Failed to sync to ' + objectURL + '\n' + err.toString());
+					grunt.fatal('Failed to upload to ' + objectURL + '\n' + err.toString());
 				}
 				else {
-					grunt.log.writeln('Successfuly synchronised with ' + objectURL.toString().cyan);
+					grunt.log.writeln('Successfuly uploaded to ' + objectURL.toString().cyan);
 					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
 
 					var uploaded = 0;
@@ -565,22 +515,6 @@ module.exports = function (grunt) {
 
 					this.data.nb_objects = res.length;
 					this.data.uploaded = uploaded;
-				}
-			}
-			else {
-				
-				if (err) {
-					grunt.fatal('Failed to upload to ' + objectURL + '\n' + err.toString());
-				}
-				else {
-					grunt.log.writeln('Successfuly uploaded to ' + objectURL.toString().cyan);
-					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
-
-					grunt.util._.each(res, function (file) {
-						grunt.log.writeln('- ' + file.src.toString().cyan + ' -> ' + (objectURL + file.dest).toString().cyan);
-					});
-
-					this.data.nb_objects = res.length;
 				}
 			}
 
