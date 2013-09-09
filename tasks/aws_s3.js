@@ -112,7 +112,7 @@ module.exports = function (grunt) {
 				pushFiles();
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({dest: dest, action: 'delete'});
+				objects.push({dest: dest, action: 'delete', differential: filePair.differential || options.differential});
 			}
 			else if (filePair.action === 'download') {
 
@@ -131,7 +131,7 @@ module.exports = function (grunt) {
 				pushFiles();
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({src: filePair.cwd, dest: dest, action: 'download'});
+				objects.push({cwd: filePair.cwd, dest: dest, action: 'download', differential: filePair.differential || options.differential});
 			}
 			else {
 
@@ -157,7 +157,7 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
 
-								if (options.differential || filePair.differential) {
+								if (filePair.differential || options.differential) {
 									diff_uploads.push({
 										src: src, 
 										dest: dest, 
@@ -271,7 +271,43 @@ module.exports = function (grunt) {
 			
 			listObjects(task.dest, function (list) {
 
-				if (list.length > 0) {
+				var to_download = [];
+
+				grunt.util._.each(list, function (o) {
+
+					var need_download = true;
+
+					if (task.differential) {
+
+						var local_files = grunt.file.expand({cwd: task.cwd}, ["**"]);
+						var local_index = local_files.indexOf(o.Key);
+
+						if (local_index !== -1) {
+
+							 var local_buffer = grunt.file.read(task.cwd + o.Key, {encoding: null})
+							 var md5_hash = '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"';
+
+							 if (md5_hash === o.ETag) {
+							 	need_download = false;
+							 }
+							 else {
+
+							 	var local_date = new Date(fs.statSync(task.cwd + o.Key).mtime).getTime();
+							 	var server_date = new Date(o.LastModified).getTime();
+							 	
+							 	if (local_date > server_date) {
+							 		need_download = false;
+							 	}
+							 }
+						}
+					}
+
+					if (need_download) {
+						to_download.push({ Key: o.Key, Bucket: options.bucket });
+					}
+				});
+
+				if (to_download.length > 0) {
 
 					var download_queue = grunt.util.async.queue(function (object, downloadCallback) {
 						
@@ -285,7 +321,7 @@ module.exports = function (grunt) {
 									downloadCallback(err);
 								}
 								else {
-									grunt.file.write(task.src + object.Key, data.Body);
+									grunt.file.write(task.cwd + object.Key, data.Body);
 									downloadCallback(null);
 								}
 							});
@@ -295,14 +331,6 @@ module.exports = function (grunt) {
 					download_queue.drain = function () {
 						callback(null, grunt.util._.pluck(list, 'Key'));
 					};
-
-					var to_download = grunt.util._.map(list, function (o) { 
-						
-						return {
-							Key: o.Key, 
-							Bucket: options.bucket
-						}; 
-					});
 					
 					download_queue.push(to_download, function (err) {
 						
@@ -367,8 +395,8 @@ module.exports = function (grunt) {
 
 					if (server_file) {
 
-						var md5_hash = crypto.createHash('md5').update(buffer).digest('hex');
-						need_upload = md5_hash !== server_file.ETag.replace(/"/g, '');
+						var md5_hash = '"' + crypto.createHash('md5').update(buffer).digest('hex') + '"';
+						need_upload = md5_hash !== server_file.ETag;
 					}
 
 					if (need_upload && !options.debug) {
@@ -433,7 +461,7 @@ module.exports = function (grunt) {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket).toString().green);
 				}
 				else if (o.action === "download") {
-					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.src.toString().green);
+					grunt.log.writeln(o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).toString().green + ' to ' + o.cwd.toString().green);
 				}
 				else if (o.action === 'sync') {
 					grunt.log.writeln(o.nb_objects.toString().green + ' objects synchronised with bucket ' + (options.bucket).toString().green + ' (' + o.uploaded.toString().green + ' uploads)');
@@ -485,7 +513,7 @@ module.exports = function (grunt) {
 				else {
 
 					if (res && res.length > 0) {
-						grunt.log.writeln('Successfuly downloaded the content of ' + objectURL.toString().cyan + ' to ' + this.data.src.toString().cyan);
+						grunt.log.writeln('Successfuly downloaded the content of ' + objectURL.toString().cyan + ' to ' + this.data.cwd.toString().cyan);
 						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects): ' + res.join(', ').toString().cyan);
 						this.data.nb_objects = res.length;
 					}
