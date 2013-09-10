@@ -238,7 +238,7 @@ module.exports = function (grunt) {
 					o.need_delete = true;
 
 					if (task.differential) {
-						// Exists locally or not
+						// Exists locally or not (remove dest in the key to get the local path)
 						o.need_delete = local_files.indexOf(o.Key.replace(task.dest, '')) === -1;
 					}
 				});
@@ -310,6 +310,7 @@ module.exports = function (grunt) {
 				
 				_.each(to_download, function (o) {
 
+					// Remove the dest in the key to not duplicate the path with cwd
 					var key = o.Key.replace(task.dest, '')
 					o.need_download = true;
 					o.Bucket = options.bucket;
@@ -493,7 +494,7 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (res && res.length > 0) {
-						grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var deleted = 0;
 
@@ -501,10 +502,10 @@ module.exports = function (grunt) {
 							
 							if (file.need_delete) {
 								deleted++;
-								grunt.log.verbose.writeln('- ' + file.Key.cyan);
+								grunt.log.writeln('- ' + file.Key.cyan);
 							}
 							else {
-								grunt.log.verbose.writeln('- ' + file.Key.yellow);
+								grunt.log.writeln('- ' + file.Key.yellow);
 							}
 						});
 
@@ -524,7 +525,7 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (res && res.length > 0) {						
-						grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var task = this.data;
 						var downloaded = 0;
@@ -533,10 +534,10 @@ module.exports = function (grunt) {
 							
 							if (file.need_download) {
 								downloaded++;
-								grunt.log.verbose.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
 							}
 							else {
-								grunt.log.verbose.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
 							}
 						});
 
@@ -555,7 +556,7 @@ module.exports = function (grunt) {
 					grunt.fatal('Upload failed\n' + err.toString());
 				}
 				else {
-					grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+					grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 					var uploaded = 0;
 
@@ -563,10 +564,10 @@ module.exports = function (grunt) {
 						
 						if (file.need_upload) {
 							uploaded++;
-							grunt.log.verbose.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
+							grunt.log.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
 						}
 						else {
-							grunt.log.verbose.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
+							grunt.log.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
 						}
 					});
 
