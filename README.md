@@ -88,24 +88,27 @@ The keys are the local file paths and the values are the MIME types.
 You need to specify the full path of the file, including the `cwd` part.  
 The `mime` hash has absolute priority over what has been set in `options.params` and the `params` option of the file list.
 
-#### options.differential
-Type: `Boolean`  
-Default: `false`
-
-At the moment this is only applicable for uploads. Enabling this option means that only files that have changed (the local md5 hash is different from the server one) will be uploaded. It can be enabled for the whole task or for specific files like so:
-
-```js
-  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], differential: true}
-```
-
-`listObjects` requests are made to list the content of the bucket and then each local file is compared to the server's ETag for this file.
-
 #### options.debug
 Type: `Boolean`  
 Default: `false`
 
 This will do a "dry run". It will not upload anything to S3 but you will get the full report just as you would in normal mode. Useful to check what will be changed on the server before actually doing it. `listObjects` requests will still be made to list the content of the bucket.
 
+#### options.differential
+Type: `Boolean`  
+Default: `false`
+
+`listObjects` requests will be made to list the content of the bucket, then they will be checked against their local file equivalent (if it exists) using MD5 (and sometimes date) comparisons.
+This means different things for different actions:
+- `upload`: will only upload the files which either don't exist on the bucket or have a different MD5 hash
+- `download`: will only download the files which either don't exist locally or have a different MD5 hash and are newer.
+- `delete`: will only delete the files which don't exist locally
+
+The option can either be specified for the whole subtask or for a specified file object like so:
+
+```js
+  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], differential: true}
+```
 
 ### Actions
 
@@ -122,12 +125,12 @@ By default, the action is `upload`.
 #### `upload`
 
 The `upload` action uses the [newest Grunt file format](http://gruntjs.com/configuring-tasks#files), allowing to take advantage of the `expand` and `filter` options.  
-It is the default action, so you can omit `'action': 'upload'` if you want a cleaner look.
+It is the default action, so you can omit `action: 'upload'` if you want a cleaner look.
 
 ```js
   files: [
     {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts'},
-    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles'}
+    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles', action: 'upload'}
   ]
 ```
 
@@ -174,6 +177,8 @@ The `options.mime` hash, however, has priority over the ContentType. So if the h
 
 The `ContentType` eventually applied to `dist/staging/styles/LICENCE` would be `text/plain` even though we had a `ContentType` specified in `options.params` or in `params` of the file.
 
+When the `differential` option is enabled, it will only upload the files which either don't exist on the bucket or have a different MD5 hash.
+
 #### `download`
 
 The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
@@ -189,6 +194,7 @@ If you specify '/' for `dest`, the whole bucket will be downloaded. It handles a
 
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
+When the `differential` options is enabled, it will only download the files which either don't exist locally or have a different MD5 hash and are newer.
 
 #### `delete`
 
@@ -204,7 +210,7 @@ If you specify '/', the whole bucket will be wiped. It handles automatically buc
 
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
-You can put a `delete` action in a separate target or in the same target as your `upload`. However, if you put it in the same target, changing the concurrency might cause mix-ups. 
+When the `differential` options is enabled, it will only delete the files which don't exist locally.
 
 Please, be careful with the `delete` action. It doesn't forgive.
 

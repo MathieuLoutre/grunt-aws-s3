@@ -124,9 +124,9 @@ module.exports = function (grunt) {
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
 				objects.push({
-					dest: dest, 
-					action: 'delete', 
-					cwd: filePair.cwd, 
+					dest: dest,
+					action: 'delete',
+					cwd: filePair.cwd,
 					differential: filePair.differential || options.differential
 				});
 			}
@@ -146,9 +146,9 @@ module.exports = function (grunt) {
 
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
 				objects.push({
-					cwd: filePair.cwd, 
-					dest: dest, 
-					action: 'download', 
+					cwd: filePair.cwd,
+					dest: dest,
+					action: 'download',
 					differential: filePair.differential || options.differential
 				});
 			}
@@ -468,7 +468,7 @@ module.exports = function (grunt) {
 					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
 				}
 				else {
-					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + options.bucket.green + '/');
+					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket + '/').green);
 				}
 			});
 

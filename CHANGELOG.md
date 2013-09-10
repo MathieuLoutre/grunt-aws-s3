@@ -6,10 +6,11 @@
 - Improved log
 - Debug option to do dry runs
 - Differential upload based on MD5 checks (using S3's ETags)
-- Differential download based on MD5 checks and date
+- Differential download based on wether it exists locally or not, MD5 checks and date
 - Differential delete based on wether it still exists locally or not
 - Tests using `mock-aws-s3` to replace the AWS package during testing
 - Code restructure/formatting
+- Update docs
 
 ### v0.6.0
 
