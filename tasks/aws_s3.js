@@ -53,6 +53,12 @@ module.exports = function (grunt) {
 				return _.contains(put_params, key); 
 			});
 		};
+
+		var getObjectURL = function (file) {
+
+			file = file || '';
+			return s3.endpoint.href + options.bucket + '/' + file;
+		};
 		
 		if (!options.accessKeyId && !options.mock) {
 			grunt.warn("Missing accessKeyId in options");
@@ -73,7 +79,7 @@ module.exports = function (grunt) {
 		};
 
 		if (!options.region) {
-			grunt.log.writeln("No region defined. S3 will default to US Standard".yellow);
+			grunt.log.writeln("No region defined. S3 will default to US Standard\n".yellow);
 		} else {
 			s3_options.region = options.region;
 		}
@@ -219,6 +225,8 @@ module.exports = function (grunt) {
 
 		var deleteObjects = function (task, callback) {
 
+			grunt.log.writeln('Deleting the content of ' + getObjectURL(task.dest).cyan);
+
 			// List all the objects using dest as the prefix
 			listObjects(task.dest, function (to_delete) {
 
@@ -257,6 +265,7 @@ module.exports = function (grunt) {
 						}
 						else {
 							deleted = deleted.concat(data.Deleted);
+							grunt.log.write('.'.green);
 						}
 						
 						if (++calls === slices) {
@@ -290,6 +299,8 @@ module.exports = function (grunt) {
 		};
 
 		var downloadObjects = function (task, callback) {
+
+			grunt.log.writeln('Downloading the content of ' + getObjectURL(task.dest).cyan + ' to ' + task.cwd.cyan);
 			
 			// List all the objects using dest as the prefix
 			listObjects(task.dest, function (to_download) {
@@ -356,7 +367,10 @@ module.exports = function (grunt) {
 					download_queue.push(to_download, function (err) {
 						
 						if (err) {
-							grunt.fatal('Failed to download ' + s3.endpoint.href + options.bucket + '/' + this.data.Key + '\n' + err);
+							grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
+						}
+						else {
+							grunt.log.write('.'.green);
 						}
 					});
 				}
@@ -367,6 +381,8 @@ module.exports = function (grunt) {
 		};
 
 		var uploadObjects = function (task, callback) {
+
+			grunt.log.writeln('Uploading to ' + getObjectURL(task.dest).cyan);
 
 			var startUploads = function (objects) {
 
@@ -411,6 +427,9 @@ module.exports = function (grunt) {
 
 					if (err) {
 						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
+					}
+					else {
+						grunt.log.write('.'.green);
 					}
 				});
 			};
@@ -461,21 +480,19 @@ module.exports = function (grunt) {
 		};
 
 		queue.push(objects, function (err, res) {
-			var object_url = s3.endpoint.href + options.bucket + '/' + (this.data.dest || '');
+			var object_url = getObjectURL(this.data.dest);
 			
 			if (this.data.action === 'delete') {
-				
 				if (err) {
 					if (res && res.length > 0) {
 						grunt.log.writeln('Errors (' + res.length.toString().red + ' objects): ' + _.pluck(res, 'Key').join(', ').red);
 					}
 
-					grunt.fatal('Failed to delete all content of ' + object_url + '\n' + err);
+					grunt.fatal('Deletion failed\n' + err.toString());
 				}
 				else {
 					if (res && res.length > 0) {
-						grunt.log.writeln('Successfuly deleted the content of ' + object_url.cyan);
-						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var deleted = 0;
 
@@ -494,27 +511,25 @@ module.exports = function (grunt) {
 						this.data.deleted =	deleted;
 					}
 					else {
-						grunt.log.writeln('Nothing to delete in ' + object_url.cyan);
+						grunt.log.writeln('Nothing to delete');
 						this.data.nb_objects = 0;
 						this.data.deleted = 0;
 					}
 				}
 			}
 			else if (this.data.action === 'download') {
-				// Remove prefix to display correct URL
-
 				if (err) {
-					grunt.fatal('Failed to download content of ' + object_url + '\n' + err.toString());
+					grunt.fatal('Download failed\n' + err.toString());
 				}
 				else {
 					if (res && res.length > 0) {
 						var task = this.data;
 						
-						grunt.log.writeln('Successfuly downloaded the content of ' + object_url.cyan + ' to ' + task.cwd.cyan);
-						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
+						// Remove prefix to display correct URL
+						object_url = getObjectURL();
 						var downloaded = 0;
-						object_url = s3.endpoint.href + options.bucket + '/';
 
 						_.each(res, function (file) {
 							
@@ -531,7 +546,7 @@ module.exports = function (grunt) {
 						this.data.downloaded =	_.countBy(res, 'need_download')['true'];
 					}
 					else {
-						grunt.log.writeln('Nothing to download in ' + object_url.cyan);
+						grunt.log.writeln('Nothing to download');
 						this.data.nb_objects = 0;
 						this.data.downloaded = 0;
 					}
@@ -539,11 +554,10 @@ module.exports = function (grunt) {
 			}
 			else {
 				if (err) {
-					grunt.fatal('Failed to upload to ' + object_url + '\n' + err.toString());
+					grunt.fatal('Upload failed\n' + err.toString());
 				}
 				else {
-					grunt.log.writeln('Successfuly uploaded to ' + object_url.cyan);
-					grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
+					grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 					var uploaded = 0;
 
