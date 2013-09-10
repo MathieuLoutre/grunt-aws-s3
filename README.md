@@ -92,7 +92,8 @@ The `mime` hash has absolute priority over what has been set in `options.params`
 Type: `Boolean`  
 Default: `false`
 
-This will do a "dry run". It will not upload anything to S3 but you will get the full report just as you would in normal mode. Useful to check what will be changed on the server before actually doing it. `listObjects` requests will still be made to list the content of the bucket.
+This will do a "dry run". It will not upload anything to S3 but you will get the full report just as you would in normal mode. Useful to check what will be changed on the server before actually doing it. Unless one of your actions depends on another (like download following a delete), the report should be accurate.  
+`listObjects` requests will still be made to list the content of the bucket.
 
 #### options.differential
 Type: `Boolean`  
@@ -123,7 +124,7 @@ This Grunt task supports three modes of interaction with S3, `upload`, `download
 You choose the action by specifying the key `action` in the file hash like so:
 
 ```js
-  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], dest: 'app/js'}
+  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], dest: 'app/js/'}
 ```
 
 By default, the action is `upload`.
@@ -135,8 +136,8 @@ It is the default action, so you can omit `action: 'upload'` if you want a clean
 
 ```js
   files: [
-    {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts'},
-    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles', action: 'upload'}
+    {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts/'},
+    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles/', action: 'upload'}
   ]
 ```
 
@@ -152,8 +153,8 @@ You can also include a `params` hash which will override the options.params one.
   // ...
 
   files: [
-    {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts', params: {CacheControl: '2000'}},
-    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles'}
+    {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts/', params: {CacheControl: '2000'}},
+    {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles/'}
   ]
 ```
 
@@ -246,9 +247,9 @@ aws_s3: {
       differential: true // Only uploads the files that have changed
     },
     files: [
-      {dest: 'app/', cwd: 'backup/staging', action: 'download'},
-      {expand: true, cwd: 'dist/staging/scripts', src: ['**'], dest: 'app/scripts'},
-      {expand: true, cwd: 'dist/staging/styles', src: ['**'], dest: 'app/styles'},
+      {dest: 'app/', cwd: 'backup/staging/', action: 'download'},
+      {expand: true, cwd: 'dist/staging/scripts/', src: ['**'], dest: 'app/scripts/'},
+      {expand: true, cwd: 'dist/staging/styles/', src: ['**'], dest: 'app/styles/'},
       {dest: 'src/app', action: 'delete'},
     ]
   },
@@ -263,8 +264,8 @@ aws_s3: {
       }
     },
     files: [
-      {expand: true, cwd: 'dist/production', src: ['**'], dest: 'app/'},
-      {expand: true, cwd: 'assets/prod', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'},
+      {expand: true, cwd: 'dist/production/', src: ['**'], dest: 'app/'},
+      {expand: true, cwd: 'assets/prod/', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'},
       // CacheControl only applied to the assets folder
       // LICENCE inside that folder will have ContentType equal to 'text/plain'
     ]
@@ -293,7 +294,7 @@ aws_s3: {
       access: 'private'
     },
     files: [
-      {expand: true, cwd: 'secret_garden', src: ['*.key'], dest: 'secret/'},
+      {expand: true, cwd: 'secret_garden/', src: ['*.key'], dest: 'secret/'},
     ]
   },
 },
