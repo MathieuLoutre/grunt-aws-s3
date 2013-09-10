@@ -468,7 +468,7 @@ module.exports = function (grunt) {
 					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
 				}
 				else {
-					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + options.bucket.green);
+					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + options.bucket.green + '/');
 				}
 			});
 
@@ -522,23 +522,20 @@ module.exports = function (grunt) {
 					grunt.fatal('Download failed\n' + err.toString());
 				}
 				else {
-					if (res && res.length > 0) {
-						var task = this.data;
-						
+					if (res && res.length > 0) {						
 						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
-						// Remove prefix to display correct URL
-						object_url = getObjectURL();
+						var task = this.data;
 						var downloaded = 0;
 
 						_.each(res, function (file) {
 							
 							if (file.need_download) {
 								downloaded++;
-								grunt.log.writeln('- ' + (object_url + file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + (object_url + file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
 							}
 						});
 
