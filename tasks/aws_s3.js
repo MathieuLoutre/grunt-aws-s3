@@ -248,9 +248,11 @@ module.exports = function (grunt) {
 				}
 				else if (to_delete.length > 0) {
 
+					var delete_list = _.filter(to_delete, function (o) { return o.need_delete; });
+
 					// deleteObjects requests can only take up to 1000 keys
 					// If we are deleting more than a 1000 objects, we need slices
-					var slices = Math.ceil(to_delete.length/1000);
+					var slices = Math.ceil(delete_list.length/1000);
 					var errors = [];
 					var failed = [];
 					var deleted = [];
@@ -282,7 +284,7 @@ module.exports = function (grunt) {
 
 						var start = 1000 * i;
 						var slice = {
-							Objects: _.map(to_delete.slice(start, start + 1000), function (o) { return { Key: o.Key }; })
+							Objects: _.map(delete_list.slice(start, start + 1000), function (o) { return { Key: o.Key }; })
 						};
 
 						s3.deleteObjects({ Delete: slice, Bucket: options.bucket }, function (err, data) { end(err, data); });
