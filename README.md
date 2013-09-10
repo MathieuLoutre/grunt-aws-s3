@@ -110,6 +110,12 @@ The option can either be specified for the whole subtask or for a specified file
   {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], differential: true}
 ```
 
+In order to be able to compare to the local file names, it is necessary for `dest` to be a finished path (e.g `directory/` instead of just `dir`) as the comparison is done between the file names found in `cwd` and the files found on the server `dest`. If you want to compare the files in the directory `scripts/` in your bucket and the files in the corresponding local directory `dist/scripts/` you need to have something like:
+
+```js
+  {cwd: 'dist/scripts/', dest: 'scripts/', 'action': 'download', differential: true}
+```
+
 ### Actions
 
 This Grunt task supports three modes of interaction with S3, `upload`, `download` and `delete`. Every action that you specify is executed serially, one after the other. If multiple `upload` actions are one after the other, they will be grouped together.
@@ -190,11 +196,10 @@ The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
 The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
 The `cwd` is used as the root folder to write the downloaded files. The inner folder structure will be reproduced inside that folder.
 
-If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.
-
+If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
-When the `differential` options is enabled, it will only download the files which either don't exist locally or have a different MD5 hash and are newer.
+When the `differential` options is enabled, it will only download the files which either don't exist locally or have a different MD5 hash and are newer. 
 
 #### `delete`
 
@@ -206,8 +211,7 @@ The `delete` action just requires a `dest`, no need for a `dest` like so:
 
 The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
 
-If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.
-
+If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
 When the `differential` options is enabled, it will only delete the files which don't exist locally.

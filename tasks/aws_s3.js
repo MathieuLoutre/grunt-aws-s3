@@ -239,7 +239,7 @@ module.exports = function (grunt) {
 
 					if (task.differential) {
 						// Exists locally or not
-						o.need_delete = local_files.indexOf(o.Key) === -1;
+						o.need_delete = local_files.indexOf(o.Key.replace(task.dest, '')) === -1;
 					}
 				});
 
@@ -310,15 +310,16 @@ module.exports = function (grunt) {
 				
 				_.each(to_download, function (o) {
 
+					var key = o.Key.replace(task.dest, '')
 					o.need_download = true;
 					o.Bucket = options.bucket;
 
 					if (task.differential) {
-						var local_index = local_files.indexOf(o.Key);
+						var local_index = local_files.indexOf(key);
 
 						// File exists locally or not
 						if (local_index !== -1) {
-							var local_buffer = grunt.file.read(task.cwd + o.Key, { encoding: null });
+							var local_buffer = grunt.file.read(task.cwd + key, { encoding: null });
 							var md5_hash = '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"';
 							
 							// Same file hash?
@@ -326,7 +327,7 @@ module.exports = function (grunt) {
 								o.need_download = false;
 							}
 							else {
-								var local_date = new Date(fs.statSync(task.cwd + o.Key).mtime).getTime();
+								var local_date = new Date(fs.statSync(task.cwd + key).mtime).getTime();
 								var server_date = new Date(o.LastModified).getTime();
 								
 								// If not the same md5 and server date is newer we need to download
@@ -352,7 +353,7 @@ module.exports = function (grunt) {
 									downloadCallback(err);
 								}
 								else {
-									grunt.file.write(task.cwd + object.Key, data.Body);
+									grunt.file.write(task.cwd + object.Key.replace(task.dest, ''), data.Body);
 									downloadCallback(null);
 								}
 							});
@@ -492,7 +493,7 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (res && res.length > 0) {
-						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var deleted = 0;
 
@@ -500,10 +501,10 @@ module.exports = function (grunt) {
 							
 							if (file.need_delete) {
 								deleted++;
-								grunt.log.writeln('- ' + file.Key.cyan);
+								grunt.log.verbose.writeln('- ' + file.Key.cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + file.Key.yellow);
+								grunt.log.verbose.writeln('- ' + file.Key.yellow);
 							}
 						});
 
@@ -523,7 +524,7 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (res && res.length > 0) {						
-						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+						grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var task = this.data;
 						var downloaded = 0;
@@ -532,10 +533,10 @@ module.exports = function (grunt) {
 							
 							if (file.need_download) {
 								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
+								grunt.log.verbose.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
+								grunt.log.verbose.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
 							}
 						});
 
@@ -554,7 +555,7 @@ module.exports = function (grunt) {
 					grunt.fatal('Upload failed\n' + err.toString());
 				}
 				else {
-					grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+					grunt.log.verbose.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 					var uploaded = 0;
 
@@ -562,10 +563,10 @@ module.exports = function (grunt) {
 						
 						if (file.need_upload) {
 							uploaded++;
-							grunt.log.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
+							grunt.log.verbose.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
 						}
 						else {
-							grunt.log.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
+							grunt.log.verbose.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
 						}
 					});
 

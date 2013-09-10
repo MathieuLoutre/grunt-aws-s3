@@ -39,6 +39,11 @@ module.exports = function(grunt) {
 					{expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/'},
 					{dest: 'otters/funk/', cwd: 'test/local/download/backup/', action: 'download'},
 					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'second/', differential: true},
+					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'third/'},
+					{dest: 'third/', action: 'delete', differential: true, cwd: "test/local/upload/otters/river/"},
+					{expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'fourth/'},
+					{dest: 'fourth/otters/river/', cwd: 'test/local/download/fourth/', action: 'download'},
+					{dest: 'fourth/otters/updated/', cwd: 'test/local/download/fourth/', action: 'download', differential: true},
 				]
 			},
 		},
