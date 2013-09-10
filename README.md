@@ -215,7 +215,7 @@ The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.am
 If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
 
-When the `differential` options is enabled, it will only delete the files which don't exist locally.
+When the `differential` options is enabled, it will only delete the files which don't exist locally. It also requires a `cwd` key with the path to the local folder to check against.
 
 Please, be careful with the `delete` action. It doesn't forgive.
 
