@@ -243,12 +243,12 @@ module.exports = function (grunt) {
 					}
 				});
 
+				var delete_list = _.filter(to_delete, function (o) { return o.need_delete; });
+
 				if (options.debug) {
 					callback(null, to_delete);
 				}
-				else if (to_delete.length > 0) {
-
-					var delete_list = _.filter(to_delete, function (o) { return o.need_delete; });
+				else if (delete_list.length > 0) {
 
 					// deleteObjects requests can only take up to 1000 keys
 					// If we are deleting more than a 1000 objects, we need slices
@@ -295,7 +295,12 @@ module.exports = function (grunt) {
 					}
 				}
 				else {
-					callback(null, null);
+					if (to_delete.length === 0) {
+						callback(null, null);
+					}
+					else {
+						callback(null, to_delete);
+					}
 				}
 			});
 		};
