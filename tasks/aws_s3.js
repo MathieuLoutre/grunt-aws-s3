@@ -502,19 +502,19 @@ module.exports = function (grunt) {
 			}
 			else if (this.data.action === 'download') {
 				// Remove prefix to display correct URL
-				object_url = s3.endpoint.href + options.bucket + '/';
 
 				if (err) {
-					grunt.fatal('Failed to download content of ' + object_url + (this.data.dest || '') + '\n' + err.toString());
+					grunt.fatal('Failed to download content of ' + object_url + '\n' + err.toString());
 				}
 				else {
 					if (res && res.length > 0) {
 						var task = this.data;
 						
-						grunt.log.writeln('Successfuly downloaded the content of ' + object_url.cyan + (task.dest || '') + ' to ' + task.cwd.cyan);
+						grunt.log.writeln('Successfuly downloaded the content of ' + object_url.cyan + ' to ' + task.cwd.cyan);
 						grunt.log.writeln('List: (' + res.length.toString().cyan + ' objects):');
 
 						var downloaded = 0;
+						object_url = s3.endpoint.href + options.bucket + '/';
 
 						_.each(res, function (file) {
 							
@@ -531,7 +531,7 @@ module.exports = function (grunt) {
 						this.data.downloaded =	_.countBy(res, 'need_download')['true'];
 					}
 					else {
-						grunt.log.writeln('Nothing to download in ' + object_url.cyan + (this.data.dest || ''));
+						grunt.log.writeln('Nothing to download in ' + object_url.cyan);
 						this.data.nb_objects = 0;
 						this.data.downloaded = 0;
 					}
