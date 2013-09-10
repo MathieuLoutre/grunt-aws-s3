@@ -1,7 +1,7 @@
 {
   "name": "grunt-aws-s3",
-  "description": "Upload files to AWS S3 using the AWS SDK",
-  "version": "0.6.0",
+  "description": "Interact with AWS S3 using the AWS SDK",
+  "version": "0.7.0",
   "homepage": "https://github.com/MathieuLoutre/grunt-aws-s3",
   "author": {
     "name": "Mathieu Triay",
@@ -23,21 +23,33 @@
   "engines": {
     "node": ">= 0.8.0"
   },
+  "scripts": {
+    "test": "grunt"
+  },
   "dependencies": {
     "aws-sdk": "~1.3.2",
     "mime": "~1.2.9"
   },
    "scripts": {
-    "test": "grunt test"
+    "test": "grunt"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
-    "grunt": "~0.4.0"
+    "grunt": "~0.4.0",
+    "chai": "~1.7.2",
+    "mocha": "~1.12.1",
+    "grunt-mocha-test": "~0.6.3",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.5.0",
+    "mock-aws-s3": "0.1.1"
   },
   "peerDependencies": {
     "grunt": "~0.4.0"
   },
   "keywords": [
-    "gruntplugin"
+    "gruntplugin",
+    "aws",
+    "s3",
+    "sdk"
   ]
 }
