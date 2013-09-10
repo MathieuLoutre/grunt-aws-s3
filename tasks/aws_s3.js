@@ -158,7 +158,6 @@ module.exports = function (grunt) {
 					grunt.warn('"params" can only be ' + put_params.join(', '));
 				}
 				else {
-
 					filePair.src.forEach(function (src) {
 
 						// Prevents creating empty folders
@@ -243,6 +242,7 @@ module.exports = function (grunt) {
 					}
 				});
 
+				// Just list what needs to be deleted so it can be sliced if necessary
 				var delete_list = _.filter(to_delete, function (o) { return o.need_delete; });
 
 				if (options.debug) {
@@ -295,12 +295,7 @@ module.exports = function (grunt) {
 					}
 				}
 				else {
-					if (to_delete.length === 0) {
-						callback(null, null);
-					}
-					else {
-						callback(null, to_delete);
-					}
+					callback(null, (to_delete.length > 0) ? to_delete : null);
 				}
 			});
 		};
@@ -318,7 +313,7 @@ module.exports = function (grunt) {
 				_.each(to_download, function (o) {
 
 					// Remove the dest in the key to not duplicate the path with cwd
-					var key = o.Key.replace(task.dest, '')
+					var key = o.Key.replace(task.dest, '');
 					o.need_download = true;
 					o.Bucket = options.bucket;
 
