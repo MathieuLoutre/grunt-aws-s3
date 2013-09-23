@@ -172,7 +172,6 @@ module.exports = function (grunt) {
 
 							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
-
 								uploads.push({
 									src: src, 
 									dest: dest, 
@@ -209,8 +208,9 @@ module.exports = function (grunt) {
 
 					var objects = (contents) ? contents.concat(list.Contents) : list.Contents;
 
-					if (list.Marker) {
-						listObjects(prefix, callback, list.Marker, objects);
+					if (list.IsTruncated) {
+						var marker = list.Contents.slice(-1)[0].Key;
+						listObjects(prefix, callback, marker, objects);
 					}
 					else {
 						callback(_.uniq(objects, function (o) { return o.Key; }));
