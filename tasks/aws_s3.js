@@ -209,8 +209,9 @@ module.exports = function (grunt) {
 
 					var objects = (contents) ? contents.concat(list.Contents) : list.Contents;
 
-					if (list.Marker) {
-						listObjects(prefix, callback, list.Marker, objects);
+					if (list.isTruncated) {
+						var new_marker = list.Marker || _.last(list.Contents).Key;
+						listObjects(prefix, callback, new_marker, objects);
 					}
 					else {
 						callback(_.uniq(objects, function (o) { return o.Key; }));
