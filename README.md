@@ -305,6 +305,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
 * 2013-08-21   v0.6.0   Add 'download' option. Multiple fixes.
 * 2013-08-20   v0.5.0   Add option to override automatic MIME type detection

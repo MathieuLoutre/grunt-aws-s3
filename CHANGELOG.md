@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.7.1
+
+- If a marker is not provided when listing objects but the list is flagged as truncated, use last element as marker (by @derekr)
+
 ### v0.7.0
 
 - Grouping of uploads together (treated like `delete` and `download` action in the code)
