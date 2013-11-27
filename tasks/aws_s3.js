@@ -13,13 +13,14 @@ var fs = require('fs');
 var crypto = require('crypto');
 var AWS = require('aws-sdk');
 var mime = require('mime');
+var _ = require('lodash');
+var async = require('async');
 
 module.exports = function (grunt) {
 
 	grunt.registerMultiTask('aws_s3', 'Interact with AWS S3 using the AWS SDK', function () {
 
 		var done = this.async();
-		var _ = grunt.util._;
 
 		var options = this.options({
 			access: 'public-read',
@@ -163,7 +164,7 @@ module.exports = function (grunt) {
 						// Prevents creating empty folders
 						if (!grunt.file.isDir(src)) {
 
-							if (_.endsWith(dest, '/')) {
+							if (_.last(dest) === '/') {
 								dest = (is_expanded) ? filePair.dest : unixifyPath(path.join(filePair.dest, src));
 							} 
 							else {
@@ -345,7 +346,7 @@ module.exports = function (grunt) {
 
 				if (to_download.length > 0) {
 
-					var download_queue = grunt.util.async.queue(function (object, downloadCallback) {
+					var download_queue = async.queue(function (object, downloadCallback) {
 
 						if (options.debug || !object.need_download) {
 							downloadCallback(null);
@@ -391,7 +392,7 @@ module.exports = function (grunt) {
 
 			var startUploads = function (objects) {
 
-				var upload_queue = grunt.util.async.queue(function (object, uploadCallback) {
+				var upload_queue = async.queue(function (object, uploadCallback) {
 
 					var server_file = _.where(objects, { Key: object.dest })[0];
 					var buffer = grunt.file.read(object.src, { encoding: null });
@@ -449,7 +450,7 @@ module.exports = function (grunt) {
 			}
 		};
 
-		var queue = grunt.util.async.queue(function (task, callback) {
+		var queue = async.queue(function (task, callback) {
 
 			if (task.action === 'delete') {
 				deleteObjects(task, callback);

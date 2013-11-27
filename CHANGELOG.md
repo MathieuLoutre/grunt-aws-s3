@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.7.2
+
+- Follow Grunt 0.4.2 guidelines and include external `lodash` and `async` 
+
 ### v0.7.1
 
 - If a marker is not provided when listing objects but the list is flagged as truncated, use last element as marker (by @derekr)
