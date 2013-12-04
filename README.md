@@ -48,11 +48,26 @@ The AWS [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_regi
 
 If not specified, it uploads to the default 'US Standard'
 
+#### options.maxRetries
+Type: `Integer`
+
+The maximum amount of retries to attempt with a request.
+
+#### options.sslEnabled
+Type: `Boolean`  
+
+Whether to enable SSL for requests or not.
+
+#### options.httpOptions
+Type: `Object`  
+
+A set of options to pass to the low-level HTTP request. The list of option can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property)
+
 #### options.access
 Type: `String`  
 Default:`public-read`
 
-The ACL you want to apply to ALL the files that will be uploaded. The ACL values can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property).
+The ACL you want to apply to ALL the files that will be uploaded. The ACL values can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property).
 
 #### options.uploadConcurrency
 Type: `Integer`  
@@ -70,7 +85,7 @@ Number of download in parallel. By default, there's no concurrency.
 #### options.params
 Type: `Object`
 
-A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
+A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
 
 #### options.mime
 Type: `Object`
@@ -194,7 +209,7 @@ The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
   {cwd: 'download/', dest: 'app/', 'action': 'download'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
 The `cwd` is used as the root folder to write the downloaded files. The inner folder structure will be reproduced inside that folder.
 
 If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.  
@@ -210,7 +225,7 @@ The `delete` action just requires a `dest`, no need for a `dest` like so:
   {dest: 'app/', 'action': 'delete'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3_20060301.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
 
 If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
