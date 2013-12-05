@@ -77,4 +77,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 
 	grunt.registerTask('default', ['clean', 'copy', 'create_bucket', 'aws_s3:test_local', 'mochaTest']);
+	grunt.registerTask('test-live', ['clean', 'copy', 'aws_s3:test_live']);
 };

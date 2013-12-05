@@ -1,6 +1,6 @@
 # grunt-aws-s3
 
-> Upload files to AWS S3 using AWS SDK
+> Interact with AWS S3 using AWS SDK
 
 ## Warning 
 
@@ -229,7 +229,7 @@ Example:
 
 #### `delete`
 
-The `delete` action just requires a `dest`, no need for a `dest` like so:
+The `delete` action just requires a `dest`, no need for a `src` like so:
 
 ```js
   {dest: 'app/', 'action': 'delete'}
