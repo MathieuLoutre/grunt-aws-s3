@@ -61,6 +61,23 @@ module.exports = function (grunt) {
 			return s3.endpoint.href + options.bucket + '/' + file;
 		};
 
+		var getRelativeKeyPath = function (key, dest) {
+
+			var path;
+
+			if (_.last(dest) === '/') {
+				path = key.replace(dest, '');
+			}
+			else if (key.replace(dest, '') === '') {
+				path = _.last(key.split('/'));
+			}
+			else {
+				path = key;
+			}
+
+			return path;
+		};
+
 		if (!options.accessKeyId && !options.mock) {
 			grunt.warn("Missing accessKeyId in options");
 		}
@@ -92,7 +109,7 @@ module.exports = function (grunt) {
 		}
 
 		// Allow additional (not required) options
-		_.extend(s3_options, _.pick(options, ['maxRetries', 'sslEnabled', 'httpOptions']))
+		_.extend(s3_options, _.pick(options, ['maxRetries', 'sslEnabled', 'httpOptions']));
 
 		var s3 = new AWS.S3(s3_options);
 
@@ -243,7 +260,7 @@ module.exports = function (grunt) {
 
 					if (task.differential) {
 						// Exists locally or not (remove dest in the key to get the local path)
-						o.need_delete = local_files.indexOf(o.Key.replace(task.dest, '')) === -1;
+						o.need_delete = local_files.indexOf(getRelativeKeyPath(o.Key, task.dest)) === -1;
 					}
 				});
 
@@ -318,7 +335,7 @@ module.exports = function (grunt) {
 				_.each(to_download, function (o) {
 
 					// Remove the dest in the key to not duplicate the path with cwd
-					var key = o.Key.replace(task.dest, '');
+					var key = getRelativeKeyPath(o.Key, task.dest);
 					o.need_download = true;
 					o.Bucket = options.bucket;
 
@@ -361,7 +378,8 @@ module.exports = function (grunt) {
 									downloadCallback(err);
 								}
 								else {
-									grunt.file.write(task.cwd + object.Key.replace(task.dest, ''), data.Body);
+									// Get the relative path to avoid repeating the same path when we can
+									grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
 									downloadCallback(null);
 								}
 							});
@@ -541,15 +559,15 @@ module.exports = function (grunt) {
 
 							if (file.need_download) {
 								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + file.Key).cyan);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + file.Key).yellow);
+								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
 							}
 						});
 
 						this.data.nb_objects = res.length;
-						this.data.downloaded =	_.countBy(res, 'need_download')['true'];
+						this.data.downloaded =	_.countBy(res, 'need_download')['true'] || 0;
 					}
 					else {
 						grunt.log.writeln('Nothing to download');

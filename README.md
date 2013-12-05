@@ -217,6 +217,16 @@ If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.
 
 When the `differential` options is enabled, it will only download the files which either don't exist locally or have a different MD5 hash and are newer. 
 
+Note: if `dest` is a file, it will be downloaded to `cwd` + `file name`. If `dest` is a directory ending with `/`, its content will be downloaded to `cwd` + `file names or directories found in dest`. If `dest` is neither a file nor a directory, the files found using it as a prefix will be downloaded to `cwd` + `paths found using dest as the prefix`.
+
+Example:
+
+```js
+  {cwd: 'download/', dest: 'app/', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app/myapp.js', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app', 'action': 'download'} // app/myapp.js downloaded to download/app/myapp.js
+```
+
 #### `delete`
 
 The `delete` action just requires a `dest`, no need for a `dest` like so:
@@ -320,7 +330,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bug
+* 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
 * 2013-08-21   v0.6.0   Add 'download' option. Multiple fixes.

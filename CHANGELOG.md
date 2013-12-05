@@ -5,6 +5,7 @@
 - Follow Grunt 0.4.2 guidelines and include external `lodash` and `async`
 - Add more options (httpOptions, maxRetries, sslEnabled)
 - Fix a bug when downloading and extra keys where sent to getObject
+- Fix download of a single item. Key paths are now relative to given dest if dest is a directory or the file itself
 
 ### v0.7.1
 

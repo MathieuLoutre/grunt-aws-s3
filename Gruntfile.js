@@ -25,7 +25,7 @@ module.exports = function(grunt) {
 			},
 		},
 		aws_s3: {
-			test: {
+			test_local: {
 				options: {
 					bucket: __dirname + '/test/local/bucket',
 					concurrency: 1,
@@ -76,6 +76,5 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 
-	grunt.registerTask('default', ['clean', 'copy', 'create_bucket', 'aws_s3', 'mochaTest']);
-
+	grunt.registerTask('default', ['clean', 'copy', 'create_bucket', 'aws_s3:test_local', 'mochaTest']);
 };
