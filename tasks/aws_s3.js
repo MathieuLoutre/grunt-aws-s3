@@ -355,7 +355,7 @@ module.exports = function (grunt) {
 							downloadCallback(null);
 						}
 						else {
-							s3.getObject(object, function (err, data) {
+							s3.getObject(_.pick(object, ['Key', 'Bucket']), function (err, data) {
 
 								if (err) {
 									downloadCallback(err);

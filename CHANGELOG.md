@@ -2,7 +2,9 @@
 
 ### v0.7.2
 
-- Follow Grunt 0.4.2 guidelines and include external `lodash` and `async` 
+- Follow Grunt 0.4.2 guidelines and include external `lodash` and `async`
+- Add more options (httpOptions, maxRetries, sslEnabled)
+- Fix a bug when downloading and extra keys where sent to getObject
 
 ### v0.7.1
 
