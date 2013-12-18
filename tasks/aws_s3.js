@@ -416,11 +416,12 @@ module.exports = function (grunt) {
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
 					var server_file = _.where(objects, { Key: object.dest })[0];
-					var buffer = grunt.file.read(object.src, { encoding: null });
+					var stream = fs.createReadStream(object.src);
 
 					if (server_file && object.differential) {
+						var hash_buffer = grunt.file.read(object.src, { encoding: null });
 						// S3's ETag has quotes around it...
-						var md5_hash = '"' + crypto.createHash('md5').update(buffer).digest('hex') + '"';
+						var md5_hash = '"' + crypto.createHash('md5').update(hash_buffer).digest('hex') + '"';
 						object.need_upload = md5_hash !== server_file.ETag;
 					}
 
@@ -429,7 +430,7 @@ module.exports = function (grunt) {
 						var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
 						var upload = _.defaults({
 							ContentType: type,
-							Body: buffer,
+							Body: stream,
 							Key: object.dest,
 							Bucket: options.bucket,
 							ACL: options.access
