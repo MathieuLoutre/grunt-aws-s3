@@ -379,7 +379,11 @@ module.exports = function (grunt) {
 								}
 								else {
 									// Get the relative path to avoid repeating the same path when we can
-									grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
+									if (grunt.util._.endsWith(task.cwd + getRelativeKeyPath(object.Key, task.dest), path.sep)) {
+									    grunt.file.mkdir(task.cwd + getRelativeKeyPath(object.Key, task.dest));
+								    } else {
+									    grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
+								    }
 									downloadCallback(null);
 								}
 							});
