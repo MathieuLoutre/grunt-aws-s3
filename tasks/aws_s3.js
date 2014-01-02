@@ -164,10 +164,11 @@ module.exports = function (grunt) {
 				}
 
 				pushUploads();
-
+				
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
 				objects.push({
 					cwd: filePair.cwd,
+					exclude: filePair.exclude,
 					dest: dest,
 					action: 'download',
 					differential: filePair.differential || options.differential
@@ -367,7 +368,7 @@ module.exports = function (grunt) {
 				if (to_download.length > 0) {
 
 					var download_queue = async.queue(function (object, downloadCallback) {
-
+						
 						if (options.debug || !object.need_download) {
 							downloadCallback(null);
 						}
@@ -378,12 +379,21 @@ module.exports = function (grunt) {
 									downloadCallback(err);
 								}
 								else {
-									// Get the relative path to avoid repeating the same path when we can
-									if (grunt.util._.endsWith(task.cwd + getRelativeKeyPath(object.Key, task.dest), path.sep)) {
-									    grunt.file.mkdir(task.cwd + getRelativeKeyPath(object.Key, task.dest));
-								    } else {
-									    grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
-								    }
+									
+									grunt.log.debug('Try to save ' + getObjectURL(object.Key) + '\n');
+									
+									if (!grunt.file.isMatch(task.exclude, object.Key)) {
+			
+										// Get the relative path to avoid repeating the same path when we can
+										if (grunt.util._.endsWith(task.cwd + getRelativeKeyPath(object.Key, task.dest), path.sep)) {
+										    grunt.file.mkdir(task.cwd + getRelativeKeyPath(object.Key, task.dest));
+									    } else {
+										    grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
+									    }
+										object.download_excluded = false;
+									} else {
+										object.download_excluded = true;
+									}
 									downloadCallback(null);
 								}
 							});
@@ -396,7 +406,7 @@ module.exports = function (grunt) {
 					};
 
 					download_queue.push(to_download, function (err) {
-
+												
 						if (err) {
 							grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
 						}
@@ -562,8 +572,12 @@ module.exports = function (grunt) {
 						_.each(res, function (file) {
 
 							if (file.need_download) {
-								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
+								if (file.download_excluded) {
+									grunt.log.writeln('- ' + getObjectURL(file.Key).red + ' -| ');
+								} else {
+									downloaded++;
+									grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
+								}
 							}
 							else {
 								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
@@ -604,7 +618,7 @@ module.exports = function (grunt) {
 					this.data.uploaded = uploaded;
 				}
 			}
-
+			
 			grunt.log.writeln();
 		});
 	});
