@@ -385,7 +385,7 @@ module.exports = function (grunt) {
 									if (!grunt.file.isMatch(task.exclude, object.Key)) {
 			
 										// Get the relative path to avoid repeating the same path when we can
-										if (grunt.util._.endsWith(task.cwd + getRelativeKeyPath(object.Key, task.dest), path.sep)) {
+										if (_.last(task.cwd + getRelativeKeyPath(object.Key, task.dest)) === path.sep) {
 										    grunt.file.mkdir(task.cwd + getRelativeKeyPath(object.Key, task.dest));
 									    } else {
 										    grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
