@@ -151,6 +151,7 @@ module.exports = function (grunt) {
 					action: 'delete',
 					cwd: filePair.cwd,
 					exclude: filePair.exclude,
+					flipExclude: filePair.flipExclude || false,
 					differential: filePair.differential || options.differential
 				});
 			}
@@ -172,6 +173,7 @@ module.exports = function (grunt) {
 				objects.push({
 					cwd: filePair.cwd,
 					exclude: filePair.exclude,
+					flipExclude: filePair.flipExclude || false,
 					dest: dest,
 					action: 'download',
 					differential: filePair.differential || options.differential
@@ -263,6 +265,10 @@ module.exports = function (grunt) {
 					o.need_delete = true;
 					o.excluded = task.exclude && grunt.file.isMatch(task.exclude, o.Key);
 
+					if (task.exclude && task.flipExclude) {
+						o.excluded = !o.excluded;
+					}
+
 					if (task.differential && !o.excluded) {
 						// Exists locally or not (remove dest in the key to get the local path)
 						o.need_delete = local_files.indexOf(getRelativeKeyPath(o.Key, task.dest)) === -1;
@@ -341,9 +347,13 @@ module.exports = function (grunt) {
 
 					// Remove the dest in the key to not duplicate the path with cwd
 					var key = getRelativeKeyPath(o.Key, task.dest);
+					o.Bucket = options.bucket;
 					o.need_download = _.last(task.cwd + key) !== '/'; // no need to write directories
 					o.excluded = task.exclude && grunt.file.isMatch(task.exclude, o.Key);
-					o.Bucket = options.bucket;
+
+					if (task.exclude && task.flipExclude) {
+						o.excluded = !o.excluded;
+					}
 
 					if (task.differential && o.need_download && !o.excluded) {
 						var local_index = local_files.indexOf(key);

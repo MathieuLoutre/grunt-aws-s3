@@ -46,7 +46,7 @@ module.exports = function(grunt) {
 					{dest: 'fourth/otters/updated/', cwd: 'test/local/download/fourth/', action: 'download', differential: true},
 					{dest: 'fourth/otters/updated/', cwd: 'test/local/download/fifth/', exclude: "**/yay*", action: 'download'},
 					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'fifth/'},
-					{dest: 'fifth/', exclude: "**/yo*", action: 'delete'},
+					{dest: 'fifth/', exclude: "**/*copy*", flipExclude: true, action: 'delete'},
 				]
 			},
 		},

@@ -222,10 +222,17 @@ Note: if `dest` is a file, it will be downloaded to `cwd` + `file name`. If `des
 The `download` action can also take an `exclude` option like so:
 
 ```js
-  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*""}
+  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*"}
 ```
 
-The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.`.
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be downloaded).
+If you want to reverse the `exclude` (that is, only what will match the pattern will be downloaded), you can use the `flipExclude` option like so:
+
+```js
+  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*", flipExclude: true}
+```
+
+In this example, only the files starting with a `.` will be downloaded.
 
 Example:
 
@@ -251,6 +258,21 @@ If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.
 When the `differential` options is enabled, it will only delete the files which don't exist locally. It also requires a `cwd` key with the path to the local folder to check against.
 
 Please, be careful with the `delete` action. It doesn't forgive.
+
+The `delete` action can also take an `exclude` option like so:
+
+```js
+  {dest: 'app/', 'action': 'delete', exclude "**/.*"}
+```
+
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be deleted).
+If you want to reverse the `exclude` (that is, only what will match the pattern will be deleted), you can use the `flipExclude` option like so:
+
+```js
+  {dest: 'app/', 'action': 'delete', exclude "**/.*", flipExclude: true}
+```
+
+In this example, only the files starting with a `.` will be deleted.
 
 ### Usage Examples
 

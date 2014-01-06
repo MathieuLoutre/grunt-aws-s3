@@ -24,7 +24,7 @@ describe('S3', function () {
 		expect(fourth_bucket.length).to.equal(2945);
 		expect(fourth.length).to.equal(1472);
 		expect(fifth.length).to.equal(560);
-		expect(fifth_bucket.length).to.equal(560);
+		expect(fifth_bucket.length).to.equal(2);
 
 		done();
 	});
