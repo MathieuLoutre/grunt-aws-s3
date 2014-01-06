@@ -150,6 +150,7 @@ module.exports = function (grunt) {
 					dest: dest,
 					action: 'delete',
 					cwd: filePair.cwd,
+					exclude: filePair.exclude,
 					differential: filePair.differential || options.differential
 				});
 			}
@@ -260,15 +261,16 @@ module.exports = function (grunt) {
 				_.each(to_delete, function (o) {
 
 					o.need_delete = true;
+					o.excluded = task.exclude && grunt.file.isMatch(task.exclude, o.Key);
 
-					if (task.differential) {
+					if (task.differential && !o.excluded) {
 						// Exists locally or not (remove dest in the key to get the local path)
 						o.need_delete = local_files.indexOf(getRelativeKeyPath(o.Key, task.dest)) === -1;
 					}
 				});
 
 				// Just list what needs to be deleted so it can be sliced if necessary
-				var delete_list = _.filter(to_delete, function (o) { return o.need_delete; });
+				var delete_list = _.filter(to_delete, function (o) { return o.need_delete && !o.excluded; });
 
 				if (options.debug) {
 					callback(null, to_delete);
@@ -531,12 +533,13 @@ module.exports = function (grunt) {
 
 						_.each(res, function (file) {
 
-							if (file.need_delete) {
+							if (file.need_delete && !file.excluded) {
 								deleted++;
 								grunt.log.writeln('- ' + file.Key.cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + file.Key.yellow);
+								var sign = (file.excluded) ? '! ' : '- ';
+								grunt.log.writeln(sign + file.Key.yellow);
 							}
 						});
 

@@ -3,6 +3,7 @@
 ### v0.7.3
 - If a directory is found during download, it will be skipped (and won't create empty dirs). This happened only a an empty directory has been created manually on S3 (by @nicolindemann)
 - Use a glob pattern to exclude files when downloading a folder (with @nicolindemann)
+- Chaneg dot colour wether the object has been downloaded/uploaded
 
 ### v0.7.2
 
