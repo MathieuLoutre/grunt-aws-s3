@@ -170,6 +170,7 @@ module.exports = function (grunt) {
 				dest = (filePair.dest === '/') ? '' : filePair.dest;
 				objects.push({
 					cwd: filePair.cwd,
+					exclude: filePair.exclude,
 					dest: dest,
 					action: 'download',
 					differential: filePair.differential || options.differential
@@ -339,9 +340,10 @@ module.exports = function (grunt) {
 					// Remove the dest in the key to not duplicate the path with cwd
 					var key = getRelativeKeyPath(o.Key, task.dest);
 					o.need_download = _.last(task.cwd + key) !== '/'; // no need to write directories
+					o.excluded = task.exclude && grunt.file.isMatch(task.exclude, o.Key);
 					o.Bucket = options.bucket;
 
-					if (task.differential) {
+					if (task.differential && o.need_download && !o.excluded) {
 						var local_index = local_files.indexOf(key);
 
 						// File exists locally or not
@@ -370,8 +372,8 @@ module.exports = function (grunt) {
 
 					var download_queue = async.queue(function (object, downloadCallback) {
 
-						if (options.debug || !object.need_download) {
-							downloadCallback(null);
+						if (options.debug || !object.need_download || object.excluded) {
+							downloadCallback(null, false);
 						}
 						else {
 							s3.getObject(_.pick(object, ['Key', 'Bucket']), function (err, data) {
@@ -382,7 +384,7 @@ module.exports = function (grunt) {
 								else {
 									// Get the relative path to avoid repeating the same path when we can
 									grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
-									downloadCallback(null);
+									downloadCallback(null, true);
 								}
 							});
 						}
@@ -393,13 +395,14 @@ module.exports = function (grunt) {
 						callback(null, to_download);
 					};
 
-					download_queue.push(to_download, function (err) {
+					download_queue.push(to_download, function (err, downloaded) {
 
 						if (err) {
 							grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
 						}
 						else {
-							grunt.log.write('.'.green);
+							var dot = (downloaded) ? '.'.green : '.'.yellow;
+							grunt.log.write(dot);
 						}
 					});
 				}
@@ -438,11 +441,11 @@ module.exports = function (grunt) {
 						}, object.params);
 
 						s3.putObject(upload, function (err, data) {
-							uploadCallback(err);
+							uploadCallback(err, true);
 						});
 					}
 					else {
-						uploadCallback(null);
+						uploadCallback(null, false);
 					}
 
 				}, options.uploadConcurrency || options.concurrency);
@@ -458,7 +461,8 @@ module.exports = function (grunt) {
 						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
 					}
 					else {
-						grunt.log.write('.'.green);
+						var dot = (uploaded) ? '.'.green : '.'.yellow;
+						grunt.log.write(dot);
 					}
 				});
 			};
@@ -559,17 +563,18 @@ module.exports = function (grunt) {
 
 						_.each(res, function (file) {
 
-							if (file.need_download) {
+							if (file.need_download && !file.excluded) {
 								downloaded++;
 								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
 							}
 							else {
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + ' === ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
+								var sign = (file.excluded) ? ' =/= ' : ' === ';
+								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + sign + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
 							}
 						});
 
 						this.data.nb_objects = res.length;
-						this.data.downloaded =	_.countBy(res, 'need_download')['true'] || 0;
+						this.data.downloaded = downloaded || 0;
 					}
 					else {
 						grunt.log.writeln('Nothing to download');
