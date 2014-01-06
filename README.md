@@ -206,7 +206,7 @@ When the `differential` option is enabled, it will only upload the files which e
 The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
 
 ```js
-  {cwd: 'download/', dest: 'app/', 'action': 'download'}
+  {cwd: 'download/', dest: 'app/', action: 'download'}
 ```
 
 The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
@@ -219,12 +219,20 @@ When the `differential` options is enabled, it will only download the files whic
 
 Note: if `dest` is a file, it will be downloaded to `cwd` + `file name`. If `dest` is a directory ending with `/`, its content will be downloaded to `cwd` + `file names or directories found in dest`. If `dest` is neither a file nor a directory, the files found using it as a prefix will be downloaded to `cwd` + `paths found using dest as the prefix`.
 
+The `download` action can also take an `exclude` option like so:
+
+```js
+  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*""}
+```
+
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.`.
+
 Example:
 
 ```js
-  {cwd: 'download/', dest: 'app/', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
-  {cwd: 'download/', dest: 'app/myapp.js', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
-  {cwd: 'download/', dest: 'app', 'action': 'download'} // app/myapp.js downloaded to download/app/myapp.js
+  {cwd: 'download/', dest: 'app/', action: 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app/myapp.js', action: 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app', action: 'download'} // app/myapp.js downloaded to download/app/myapp.js
 ```
 
 #### `delete`
@@ -330,7 +338,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2013-01-06   v0.7.3   Fix for folder download.
+* 2013-01-06   v0.7.3   Fix for folder download. Exclude files when downloading.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
