@@ -61,11 +61,13 @@ module.exports = function (grunt) {
 			return s3.endpoint.href + options.bucket + '/' + file;
 		};
 
+		// Get the key URL relative to a path string 
 		var getRelativeKeyPath = function (key, dest) {
 
 			var path;
 
 			if (_.last(dest) === '/') {
+				// if the path string is a directory, remove it from the key
 				path = key.replace(dest, '');
 			}
 			else if (key.replace(dest, '') === '') {
@@ -336,7 +338,7 @@ module.exports = function (grunt) {
 
 					// Remove the dest in the key to not duplicate the path with cwd
 					var key = getRelativeKeyPath(o.Key, task.dest);
-					o.need_download = true;
+					o.need_download = _.last(task.cwd + key) !== '/'; // no need to write directories
 					o.Bucket = options.bucket;
 
 					if (task.differential) {

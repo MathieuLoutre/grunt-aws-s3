@@ -330,6 +330,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2013-01-06   v0.7.3   Fix for folder download.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.

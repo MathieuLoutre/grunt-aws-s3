@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.7.3
+- If a folder is found during download, it will be skipped (and won't create empty dirs). This happened only a an empty directory has been created manually on S3 (by @nicolindemann)
+
 ### v0.7.2
 
 - Follow Grunt 0.4.2 guidelines and include external `lodash` and `async`
