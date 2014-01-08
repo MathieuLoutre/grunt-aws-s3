@@ -220,7 +220,7 @@ The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
   {cwd: 'download/', dest: 'app/', action: 'download'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). 
 The `cwd` is used as the root folder to write the downloaded files. The inner folder structure will be reproduced inside that folder.
 
 If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.  
@@ -261,7 +261,7 @@ The `delete` action just requires a `dest`, no need for a `src` like so:
   {dest: 'app/', 'action': 'delete'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). 
 
 If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
@@ -331,6 +331,7 @@ aws_s3: {
     },
     files: [
       {expand: true, cwd: 'dist/production/', src: ['**'], dest: 'app/'},
+      {expand: true, cwd: 'assets/prod/large', src: ['**'], dest: 'assets/large/', stream: true}, // enable stream to allow large files
       {expand: true, cwd: 'assets/prod/', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'},
       // CacheControl only applied to the assets folder
       // LICENCE inside that folder will have ContentType equal to 'text/plain'
@@ -343,6 +344,8 @@ aws_s3: {
     },
     files: [
       {dest: 'app/', action: 'delete'},
+      {dest: 'assets/', exclude: "**/*.tgz", action: 'delete'}, // will not delete the tgz
+      {dest: 'assets/large/', exclude: "**/*copy*", flipExclude: true, action: 'delete'}, // will delete everything that has copy in the name
     ]
   },
   download_production: {
@@ -350,8 +353,8 @@ aws_s3: {
       bucket: 'my-wonderful-production-bucket'
     },
     files: [
-      {dest: 'app/', cwd: 'backup/', action: 'download'},
-      // Downloads the content of app/ to backup/
+      {dest: 'app/', cwd: 'backup/', action: 'download'}, // Downloads the content of app/ to backup/
+      {dest: 'assets/', cwd: 'backup-assets/', exclude: "**/*copy*", action: 'download'}, // Downloads everything which doesn't have copy in the name
     ]
   },
   secret: {
