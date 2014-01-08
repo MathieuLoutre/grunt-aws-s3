@@ -105,22 +105,23 @@ module.exports = function (grunt) {
 			}
 		};
 
-		var checkFileDate = function (file_path, server_date, compare_date, callback) {
+		// Checks that local file is 'date_compare' than server file
+		var checkFileDate = function (options, callback) {
 
-			fs.stat(file_path, function (err, stats) {
+			fs.stat(options.file_path, function (err, stats) {
 
 				if (err) {
 					callback(err);
 				}
 				else {
 					var local_date = new Date(stats.mtime).getTime();
-					server_date = new Date(server_date).getTime();
+					var server_date = new Date(options.server_date).getTime();
 
-					if (compare_date === 'newer') {
-						callback(null, local_date >= server_date);
+					if (options.compare_date === 'newer') {
+						callback(null, local_date > server_date);
 					}
 					else {
-						callback(null, local_date <= server_date)
+						callback(null, local_date < server_date)
 					}
 				}
 			});
@@ -135,16 +136,16 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (md5_hash === options.server_hash) {
-						if (options.server_date) {
-							options.compare_date = options.compare_date || "newer";
-							checkFileDate(options.file_path, options.server_date, options.compare_date, callback);
-						}
-						else {
-							callback(null, false);
-						}
+						callback(null, false);
 					}
 					else {
-						callback(null, true);
+						if (options.server_date) {
+							options.compare_date = options.compare_date || 'older';
+							checkFileDate(options, callback);
+						}
+						else {
+							callback(null, true);
+						}
 					}
 				}
 			});
@@ -428,10 +429,18 @@ module.exports = function (grunt) {
 					if (task.differential && o.need_download && !o.excluded) {
 						var local_index = local_files.indexOf(key);
 
-						// File exists locally or not
+						// If file exists locally we need to check if it's different
 						if (local_index !== -1) {
+							
+							// Check md5 and if file is older than server file
+							var check_options = { 
+								file_path: task.cwd + key, 
+								server_hash: o.ETag, 
+								server_date: o.LastModified, 
+								date_compare: 'older' 
+							};
 
-							isFileDifferent({ file_path: task.cwd + key, server_hash: o.ETag, server_date: o.LastModified }, function (err, different) {
+							isFileDifferent(check_options, function (err, different) {
 								
 								if (err) {
 									existCallback(err);
