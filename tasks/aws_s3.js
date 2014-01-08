@@ -37,7 +37,7 @@ module.exports = function (grunt) {
 		});
 
 		// To deprecate
-		if (options.concurrency !== undefined && options.concurrency >= 0) {
+		if (options.concurrency !== undefined) {
 			grunt.log.writeln("The concurrency option is deprecated, use uploadConcurrency instead\n".yellow);
 			options.uploadConcurrency = options.concurrency;
 		}
@@ -492,16 +492,16 @@ module.exports = function (grunt) {
 									}
 									else {
 										object.need_download = different;
-										doDownload(object, downloadCallback);
+										setImmediate(doDownload, object, downloadCallback);
 									}
 								});
 							}
 							else {
-								doDownload(object, downloadCallback);
+								setImmediate(doDownload, object, downloadCallback);
 							}
 						}
 						else {
-							doDownload(object, downloadCallback);
+							setImmediate(doDownload, object, downloadCallback);
 						}
 
 					}, options.downloadConcurrency);
@@ -567,11 +567,11 @@ module.exports = function (grunt) {
 
 						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag }, function (err, different) {
 							object.need_upload = different;
-							doUpload(object, uploadCallback);
+							setImmediate(doUpload, object, uploadCallback);
 						});
 					}
 					else {
-						doUpload(object, uploadCallback);
+						setImmediate(doUpload, object, uploadCallback);
 					}
 
 				}, options.uploadConcurrency);

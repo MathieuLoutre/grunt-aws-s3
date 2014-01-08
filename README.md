@@ -73,14 +73,14 @@ The ACL you want to apply to ALL the files that will be uploaded. The ACL values
 Type: `Integer`  
 Default: `1`
 
-Number of uploads in parallel. By default, there's no concurrency. 
+Number of uploads in parallel. By default, there's no concurrency. Must be > 0.
 Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible until 1.0.0.
 
 #### options.downloadConcurrency
 Type: `Integer`  
 Default: `1`
 
-Number of download in parallel. By default, there's no concurrency.
+Number of download in parallel. By default, there's no concurrency. Must be > 0.
 
 #### options.params
 Type: `Object`
