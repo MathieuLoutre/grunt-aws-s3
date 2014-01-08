@@ -414,97 +414,92 @@ module.exports = function (grunt) {
 				// List local content if it's a differential task
 				var local_files = (task.differential) ? grunt.file.expand({ cwd: task.cwd }, ["**"]) : [];
 
-				async.each(to_download, function (o, existCallback) {
+				if (to_download.length === 0) {
+					callback(null, null);
+				}
+				else {
 
-					// Remove the dest in the key to not duplicate the path with cwd
-					var key = getRelativeKeyPath(o.Key, task.dest);
-					o.Bucket = options.bucket;
-					o.need_download = _.last(task.cwd + key) !== '/'; // no need to write directories
-					o.excluded = task.exclude && grunt.file.isMatch(task.exclude, o.Key);
+					var doDownload = function (object, downloadCallback) {
 
-					if (task.exclude && task.flipExclude) {
-						o.excluded = !o.excluded;
-					}
+						if (options.debug || !object.need_download || object.excluded) {
+							downloadCallback(null, false);
+						}
+						else {
+							s3.getObject({ Key: object.Key, Bucket: options.bucket }, function (err, data) {
 
-					if (task.differential && o.need_download && !o.excluded) {
-						var local_index = local_files.indexOf(key);
-
-						// If file exists locally we need to check if it's different
-						if (local_index !== -1) {
-							
-							// Check md5 and if file is older than server file
-							var check_options = { 
-								file_path: task.cwd + key, 
-								server_hash: o.ETag, 
-								server_date: o.LastModified, 
-								date_compare: 'older' 
-							};
-
-							isFileDifferent(check_options, function (err, different) {
-								
 								if (err) {
-									existCallback(err);
+									downloadCallback(err);
 								}
 								else {
-									o.need_download = different;
-									existCallback(null);
+									// Get the relative path to avoid repeating the same path when we can
+									grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
+									downloadCallback(null, true);
 								}
 							});
 						}
-						else {
-							existCallback(null);
+					};
+
+					var download_queue = async.queue(function (object, downloadCallback) {
+
+						// Remove the dest in the key to not duplicate the path with cwd
+						var key = getRelativeKeyPath(object.Key, task.dest);
+						object.need_download = _.last(task.cwd + key) !== '/'; // no need to write directories
+						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
+
+						if (task.exclude && task.flipExclude) {
+							object.excluded = !object.excluded;
 						}
-					}
-					else {
-						existCallback(null);
-					}
-				}, function (err) {
 
-					if (err) {
-						callback(err);
-					}
-					else if (to_download.length === 0) {
-						callback(null, null);
-					}
-					else {
+						if (task.differential && object.need_download && !object.excluded) {
+							var local_index = local_files.indexOf(key);
 
-						var download_queue = async.queue(function (object, downloadCallback) {
+							// If file exists locally we need to check if it's different
+							if (local_index !== -1) {
+								
+								// Check md5 and if file is older than server file
+								var check_options = { 
+									file_path: task.cwd + key, 
+									server_hash: object.ETag, 
+									server_date: object.LastModified, 
+									date_compare: 'older' 
+								};
 
-							if (options.debug || !object.need_download || object.excluded) {
-								downloadCallback(null, false);
-							}
-							else {
-								s3.getObject(_.pick(object, ['Key', 'Bucket']), function (err, data) {
-
+								isFileDifferent(check_options, function (err, different) {
 									if (err) {
 										downloadCallback(err);
 									}
 									else {
-										// Get the relative path to avoid repeating the same path when we can
-										grunt.file.write(task.cwd + getRelativeKeyPath(object.Key, task.dest), data.Body);
-										downloadCallback(null, true);
+										object.need_download = different;
+										doDownload(object, downloadCallback);
 									}
 								});
 							}
-						}, options.downloadConcurrency);
-
-						download_queue.drain = function () {
-
-							callback(null, to_download);
-						};
-
-						download_queue.push(to_download, function (err, downloaded) {
-
-							if (err) {
-								grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
-							}
 							else {
-								var dot = (downloaded) ? '.'.green : '.'.yellow;
-								grunt.log.write(dot);
+								doDownload(object, downloadCallback);
 							}
-						});
-					}
-				});
+						}
+						else {
+							doDownload(object, downloadCallback);
+						}
+
+					}, options.downloadConcurrency);
+
+					download_queue.drain = function () {
+
+						callback(null, to_download);
+					};
+
+					download_queue.push(to_download, function (err, downloaded) {
+
+						if (err) {
+							grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
+						}
+						else {
+							var dot = (downloaded) ? '.'.green : '.'.yellow;
+							grunt.log.write(dot);
+						}
+					});
+				}
 			});
 		};
 
@@ -514,42 +509,42 @@ module.exports = function (grunt) {
 
 			var startUploads = function (objects) {
 
+				var doUpload = function (object, uploadCallback) {
+					
+					if (object.need_upload && !options.debug) {
+
+						var buffer = grunt.file.read(object.src, { encoding: null });
+						var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
+						var upload = _.defaults({
+							ContentType: type,
+							Body: buffer,
+							Key: object.dest,
+							Bucket: options.bucket,
+							ACL: options.access
+						}, object.params);
+
+						s3.putObject(upload, function (err, data) {
+							uploadCallback(err, true);
+						});
+					}
+					else {
+						uploadCallback(null, false);
+					}
+				};
+
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
 					var server_file = _.where(objects, { Key: object.dest })[0];
-
-					var doUpload = function () {
-						
-						if (object.need_upload && !options.debug) {
-
-							var buffer = grunt.file.read(object.src, { encoding: null });
-							var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
-							var upload = _.defaults({
-								ContentType: type,
-								Body: buffer,
-								Key: object.dest,
-								Bucket: options.bucket,
-								ACL: options.access
-							}, object.params);
-
-							s3.putObject(upload, function (err, data) {
-								uploadCallback(err, true);
-							});
-						}
-						else {
-							uploadCallback(null, false);
-						}
-					};
 
 					if (server_file && object.differential) {
 
 						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag }, function (err, different) {
 							object.need_upload = different;
-							doUpload();
+							doUpload(object, uploadCallback);
 						});
 					}
 					else {
-						doUpload();
+						doUpload(object, uploadCallback);
 					}
 
 				}, options.uploadConcurrency || options.concurrency);
