@@ -80,10 +80,10 @@ module.exports = function (grunt) {
 			return path;
 		};
 
-		var hashFile = function (file_path, stream, callback) {
+		var hashFile = function (options, callback) {
 
-			if (stream) {
-				var local_stream = fs.ReadStream(file_path);
+			if (options.stream) {
+				var local_stream = fs.ReadStream(options.file_path);
 				var hash = crypto.createHash('md5');
 
 				local_stream.on('end', function () {
@@ -100,7 +100,7 @@ module.exports = function (grunt) {
 				});
 			}
 			else {
-				var local_buffer = grunt.file.read(file_path, { encoding: null });
+				var local_buffer = grunt.file.read(options.file_path, { encoding: null });
 				callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
 			}
 		};
@@ -129,7 +129,7 @@ module.exports = function (grunt) {
 
 		var isFileDifferent = function (options, callback) {
 			
-			hashFile(options.file_path, options.stream, function (err, md5_hash) {
+			hashFile(options, function (err, md5_hash) {
 
 				if (err) {
 					callback(err);
@@ -507,7 +507,7 @@ module.exports = function (grunt) {
 
 			grunt.log.writeln('Uploading to ' + getObjectURL(task.dest).cyan);
 
-			var startUploads = function (objects) {
+			var startUploads = function (server_files) {
 
 				var doUpload = function (object, uploadCallback) {
 					
@@ -534,7 +534,7 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
-					var server_file = _.where(objects, { Key: object.dest })[0];
+					var server_file = _.where(server_files, { Key: object.dest })[0];
 
 					if (server_file && object.differential) {
 
