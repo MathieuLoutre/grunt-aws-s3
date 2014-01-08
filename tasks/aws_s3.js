@@ -135,16 +135,16 @@ module.exports = function (grunt) {
 				}
 				else {
 					if (md5_hash === options.server_hash) {
-						callback(null, false);
-					}
-					else {
 						if (options.server_date) {
 							options.compare_date = options.compare_date || "newer";
 							checkFileDate(options.file_path, options.server_date, options.compare_date, callback);
 						}
 						else {
-							callback(null, true);
+							callback(null, false);
 						}
+					}
+					else {
+						callback(null, true);
 					}
 				}
 			});
