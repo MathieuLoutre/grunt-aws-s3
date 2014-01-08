@@ -465,6 +465,7 @@ module.exports = function (grunt) {
 
 						var key = getRelativeKeyPath(object.Key, task.dest); // Remove the dest in the key to not duplicate the path with cwd
 						object.dest = task.cwd + key;
+						object.stream = task.stream;
 						object.need_download = _.last(object.dest) !== '/'; // no need to write directories
 						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
 
