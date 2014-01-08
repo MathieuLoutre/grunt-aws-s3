@@ -1,9 +1,13 @@
 # CHANGELOG
 
-### v0.7.3
+### v0.8.0
 - If a directory is found during download, it will be skipped (and won't create empty dirs). This happened only a an empty directory has been created manually on S3 (by @nicolindemann)
 - Use a glob pattern to exclude files when downloading a folder (with @nicolindemann)
 - Chaneg dot colour wether the object has been downloaded/uploaded
+- Exclude option for delete
+- Refactor
+- Stream option (with @craigloftus)
+- Bug fixes on options priority (if you had differential set to true for the whole task/subtask but to false for a file object, true would take priority)
 
 ### v0.7.2
 

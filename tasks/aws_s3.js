@@ -26,8 +26,7 @@ module.exports = function (grunt) {
 			access: 'public-read',
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-			concurrency: 1,
-			uploadConcurrency: null,
+			uploadConcurrency: 1,
 			downloadConcurrency: 1,
 			mime: {},
 			params: {},
@@ -36,6 +35,19 @@ module.exports = function (grunt) {
 			differential: false,
 			stream: false
 		});
+
+		// To deprecate
+		if (options.concurrency !== undefined && options.concurrency >= 0) {
+			grunt.log.writeln("The concurrency option is deprecated, use uploadConcurrency instead\n".yellow);
+			options.uploadConcurrency = options.concurrency;
+		}
+
+		var filePairOptions = {
+			differential: options.differential, 
+			stream: options.stream, 
+			flipExclude: false, 
+			exclude: false 
+		};
 
 		// Replace the AWS SDK by the mock package if we're testing
 		if (options.mock) {
@@ -193,7 +205,7 @@ module.exports = function (grunt) {
 		var uploads = [];
 
 		// Because Grunt expands the files array automatically, 
-		// we need to group the uploads together.
+		// we need to group the uploads together to make the difference between actions.
 		var pushUploads = function() {
 
 			if (uploads.length > 0) {
@@ -208,24 +220,20 @@ module.exports = function (grunt) {
 
 			if (filePair.action === 'delete') {
 
+				_.defaults(filePair, filePairOptions);
+
 				if (!filePair.dest) {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
 				}
-				else if ((filePair.differential || options.differential) && !filePair.cwd) {
+				else if (filePair.differential && !filePair.cwd) {
 					grunt.fatal('Differential delete needs a "cwd"');
 				}
 
 				pushUploads();
 
-				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({
-					dest: dest,
-					action: 'delete',
-					cwd: filePair.cwd,
-					exclude: filePair.exclude,
-					flipExclude: filePair.flipExclude || false,
-					differential: filePair.differential || options.differential
-				});
+				filePair.dest = (filePair.dest === '/') ? '' : filePair.dest;
+				
+				objects.push(filePair);
 			}
 			else if (filePair.action === 'download') {
 
@@ -241,16 +249,9 @@ module.exports = function (grunt) {
 
 				pushUploads();
 
-				dest = (filePair.dest === '/') ? '' : filePair.dest;
-				objects.push({
-					cwd: filePair.cwd,
-					exclude: filePair.exclude,
-					flipExclude: filePair.flipExclude || false,
-					dest: dest,
-					action: 'download',
-					differential: filePair.differential || options.differential,
-					stream: filePair.stream || options.stream
-				});
+				filePair.dest = (filePair.dest === '/') ? '' : filePair.dest;
+
+				objects.push(_.defaults(filePair, filePairOptions));
 			}
 			else {
 
@@ -258,12 +259,15 @@ module.exports = function (grunt) {
 					grunt.warn('"params" can only be ' + put_params.join(', '));
 				}
 				else {
+					filePair.params = _.defaults(filePair.params || {}, options.params);
+					_.defaults(filePair, filePairOptions);
+
 					filePair.src.forEach(function (src) {
 
 						// Prevents creating empty folders
 						if (!grunt.file.isDir(src)) {
 
-							if (_.last(dest) === '/') {
+							if (_.last(filePair.dest) === '/') {
 								dest = (is_expanded) ? filePair.dest : unixifyPath(path.join(filePair.dest, src));
 							} 
 							else {
@@ -273,14 +277,11 @@ module.exports = function (grunt) {
 							// '.' means that no dest path has been given (root). Nothing to create there.
 							if (dest !== '.') {
 
-								uploads.push({
-									src: src, 
-									dest: dest, 
-									params: _.defaults(filePair.params || {}, options.params),
-									differential: filePair.differential || options.differential,
+								uploads.push(_.defaults({
 									need_upload: true,
-									stream: filePair.stream || options.stream
-								});
+									src: src, 
+									dest: dest
+								}, filePair));
 							}
 						}
 					});
@@ -573,7 +574,7 @@ module.exports = function (grunt) {
 						doUpload(object, uploadCallback);
 					}
 
-				}, options.uploadConcurrency || options.concurrency);
+				}, options.uploadConcurrency);
 
 				upload_queue.drain = function () {
 

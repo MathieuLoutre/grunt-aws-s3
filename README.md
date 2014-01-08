@@ -74,7 +74,7 @@ Type: `Integer`
 Default: `1`
 
 Number of uploads in parallel. By default, there's no concurrency. 
-Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible.
+Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible until 1.0.0.
 
 #### options.downloadConcurrency
 Type: `Integer`  
@@ -88,7 +88,7 @@ Type: `Object`
 A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
 
 #### options.mime
-Type: `Object`
+Type: `Object`  
 
 The MIME type of every file is determined by a MIME lookup using [node-mime](https://github.com/broofa/node-mime). If you want to override it, you can use this option object.
 The keys are the local file paths and the values are the MIME types.
@@ -102,6 +102,17 @@ The keys are the local file paths and the values are the MIME types.
 
 You need to specify the full path of the file, including the `cwd` part.  
 The `mime` hash has absolute priority over what has been set in `options.params` and the `params` option of the file list.
+
+#### options.stream
+Type: `Boolean`
+Default: `false`
+
+Allows to use streams instead of buffers to upload and download.
+The option can either be turned on for the whole subtask or for a specified file object like so:
+
+```js
+  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], stream: true}
+```
 
 #### options.debug
 Type: `Boolean`  
@@ -360,7 +371,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2013-01-06   v0.7.3   Fix for folder download. Exclude files when downloading.
+* 2013-01-08   v0.8.0   Refactor to add stream option. Exclude option. Fixes.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
