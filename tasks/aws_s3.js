@@ -534,7 +534,7 @@ module.exports = function (grunt) {
 
 					if (server_file && object.differential) {
 
-						isFileDifferent({ file_path: object.src, hash: server_file.ETag }, function (err, different) {
+						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag }, function (err, different) {
 							object.need_upload = different;
 							doUpload();
 						});
