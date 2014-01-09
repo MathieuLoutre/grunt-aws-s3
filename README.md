@@ -4,7 +4,8 @@
 
 ## Warning 
 
-Versions 0.4.0 to 0.5.0 have a bug where `options.params` is ignored.
+Versions 0.4.0 to 0.5.0 have a bug where `options.params` is ignored.  
+Version 0.8.0 doesn't actually support Node 0.8.x and 0.9.x.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.0`
@@ -374,6 +375,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-01-09   v0.8.1   Shim setImmediate to support Node 0.8.x
 * 2014-01-08   v0.8.0   Refactor to add stream option. Exclude option. Fixes.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
