@@ -104,7 +104,7 @@ You need to specify the full path of the file, including the `cwd` part.
 The `mime` hash has absolute priority over what has been set in `options.params` and the `params` option of the file list.
 
 #### options.stream
-Type: `Boolean`
+Type: `Boolean`  
 Default: `false`
 
 Allows to use streams instead of buffers to upload and download.
