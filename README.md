@@ -73,14 +73,14 @@ The ACL you want to apply to ALL the files that will be uploaded. The ACL values
 Type: `Integer`  
 Default: `1`
 
-Number of uploads in parallel. By default, there's no concurrency. 
-Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible.
+Number of uploads in parallel. By default, there's no concurrency. Must be > 0.
+Note: This used to be called `concurrency` but the option has been deprecated, however it is still backwards compatible until 1.0.0.
 
 #### options.downloadConcurrency
 Type: `Integer`  
 Default: `1`
 
-Number of download in parallel. By default, there's no concurrency.
+Number of download in parallel. By default, there's no concurrency. Must be > 0.
 
 #### options.params
 Type: `Object`
@@ -88,7 +88,7 @@ Type: `Object`
 A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
 
 #### options.mime
-Type: `Object`
+Type: `Object`  
 
 The MIME type of every file is determined by a MIME lookup using [node-mime](https://github.com/broofa/node-mime). If you want to override it, you can use this option object.
 The keys are the local file paths and the values are the MIME types.
@@ -102,6 +102,17 @@ The keys are the local file paths and the values are the MIME types.
 
 You need to specify the full path of the file, including the `cwd` part.  
 The `mime` hash has absolute priority over what has been set in `options.params` and the `params` option of the file list.
+
+#### options.stream
+Type: `Boolean`
+Default: `false`
+
+Allows to use streams instead of buffers to upload and download.
+The option can either be turned on for the whole subtask or for a specified file object like so:
+
+```js
+  {'action': 'upload', expand: true, cwd: 'dist/js', src: ['**'], stream: true}
+```
 
 #### options.debug
 Type: `Boolean`  
@@ -206,10 +217,10 @@ When the `differential` option is enabled, it will only upload the files which e
 The `download` action requires a `cwd`, a `dest` and *no* `src` like so:
 
 ```js
-  {cwd: 'download/', dest: 'app/', 'action': 'download'}
+  {cwd: 'download/', dest: 'app/', action: 'download'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). 
 The `cwd` is used as the root folder to write the downloaded files. The inner folder structure will be reproduced inside that folder.
 
 If you specify '/' for `dest`, the whole bucket will be downloaded. It handles automatically buckets with more than a 1000 objects.  
@@ -219,12 +230,27 @@ When the `differential` options is enabled, it will only download the files whic
 
 Note: if `dest` is a file, it will be downloaded to `cwd` + `file name`. If `dest` is a directory ending with `/`, its content will be downloaded to `cwd` + `file names or directories found in dest`. If `dest` is neither a file nor a directory, the files found using it as a prefix will be downloaded to `cwd` + `paths found using dest as the prefix`.
 
+The `download` action can also take an `exclude` option like so:
+
+```js
+  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*"}
+```
+
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be downloaded).
+If you want to reverse the `exclude` (that is, only what will match the pattern will be downloaded), you can use the `flipExclude` option like so:
+
+```js
+  {cwd: 'download/', dest: 'app/', action: 'download', exclude "**/.*", flipExclude: true}
+```
+
+In this example, only the files starting with a `.` will be downloaded.
+
 Example:
 
 ```js
-  {cwd: 'download/', dest: 'app/', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
-  {cwd: 'download/', dest: 'app/myapp.js', 'action': 'download'} // app/myapp.js downloaded to download/myapp.js
-  {cwd: 'download/', dest: 'app', 'action': 'download'} // app/myapp.js downloaded to download/app/myapp.js
+  {cwd: 'download/', dest: 'app/', action: 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app/myapp.js', action: 'download'} // app/myapp.js downloaded to download/myapp.js
+  {cwd: 'download/', dest: 'app', action: 'download'} // app/myapp.js downloaded to download/app/myapp.js
 ```
 
 #### `delete`
@@ -235,7 +261,7 @@ The `delete` action just requires a `dest`, no need for a `src` like so:
   {dest: 'app/', 'action': 'delete'}
 ```
 
-The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_. 
+The `dest` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). 
 
 If you specify '/', the whole bucket will be wiped. It handles automatically buckets with more than a 1000 objects.  
 If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.js', 'app/myapp.js', 'app/index.html, 'app backup/donotdelete.js') but it will leave alone the others (e.g. 'my app/app.js', 'backup app/donotdelete.js').
@@ -243,6 +269,21 @@ If you specify 'app', all paths starting with 'app' will be targeted (e.g. 'app.
 When the `differential` options is enabled, it will only delete the files which don't exist locally. It also requires a `cwd` key with the path to the local folder to check against.
 
 Please, be careful with the `delete` action. It doesn't forgive.
+
+The `delete` action can also take an `exclude` option like so:
+
+```js
+  {dest: 'app/', 'action': 'delete', exclude "**/.*"}
+```
+
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be deleted).
+If you want to reverse the `exclude` (that is, only what will match the pattern will be deleted), you can use the `flipExclude` option like so:
+
+```js
+  {dest: 'app/', 'action': 'delete', exclude "**/.*", flipExclude: true}
+```
+
+In this example, only the files starting with a `.` will be deleted.
 
 ### Usage Examples
 
@@ -290,6 +331,7 @@ aws_s3: {
     },
     files: [
       {expand: true, cwd: 'dist/production/', src: ['**'], dest: 'app/'},
+      {expand: true, cwd: 'assets/prod/large', src: ['**'], dest: 'assets/large/', stream: true}, // enable stream to allow large files
       {expand: true, cwd: 'assets/prod/', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'},
       // CacheControl only applied to the assets folder
       // LICENCE inside that folder will have ContentType equal to 'text/plain'
@@ -302,6 +344,8 @@ aws_s3: {
     },
     files: [
       {dest: 'app/', action: 'delete'},
+      {dest: 'assets/', exclude: "**/*.tgz", action: 'delete'}, // will not delete the tgz
+      {dest: 'assets/large/', exclude: "**/*copy*", flipExclude: true, action: 'delete'}, // will delete everything that has copy in the name
     ]
   },
   download_production: {
@@ -309,8 +353,8 @@ aws_s3: {
       bucket: 'my-wonderful-production-bucket'
     },
     files: [
-      {dest: 'app/', cwd: 'backup/', action: 'download'},
-      // Downloads the content of app/ to backup/
+      {dest: 'app/', cwd: 'backup/', action: 'download'}, // Downloads the content of app/ to backup/
+      {dest: 'assets/', cwd: 'backup-assets/', exclude: "**/*copy*", action: 'download'}, // Downloads everything which doesn't have copy in the name
     ]
   },
   secret: {
@@ -330,6 +374,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-01-08   v0.8.0   Refactor to add stream option. Exclude option. Fixes.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
 * 2013-09-24   v0.7.1   Compensate for missing marker in listObject
 * 2013-09-09   v0.7.0   Code restructure. New differential option. Tests.
