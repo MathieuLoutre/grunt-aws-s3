@@ -16,6 +16,25 @@ var mime = require('mime');
 var _ = require('lodash');
 var async = require('async');
 
+// For compatibility with Node 0.8.x
+if (process.setImmediate === undefined) {
+
+	// from https://github.com/joyent/node/pull/736#issuecomment-9887057
+	var setImmediate = function (callback) {
+
+		var args = arguments;
+		
+		if (args.length > 1) {
+			process.nextTick(function () {
+				callback.apply(null, Array.prototype.slice.call(args, 1));
+			});
+		} 
+		else {
+			process.nextTick(callback);
+		}
+	};
+}
+
 module.exports = function (grunt) {
 
 	grunt.registerMultiTask('aws_s3', 'Interact with AWS S3 using the AWS SDK', function () {
@@ -669,7 +688,7 @@ module.exports = function (grunt) {
 						});
 
 						this.data.nb_objects = res.length;
-						this.data.deleted =	deleted;
+						this.data.deleted = deleted;
 					}
 					else {
 						grunt.log.writeln('Nothing to delete');
@@ -683,7 +702,7 @@ module.exports = function (grunt) {
 					grunt.fatal('Download failed\n' + err.toString());
 				}
 				else {
-					if (res && res.length > 0) {						
+					if (res && res.length > 0) {                        
 						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 						var task = this.data;
@@ -745,7 +764,7 @@ module.exports = function (grunt) {
 		if (process.platform === 'win32') {
 			return filepath.replace(/\\/g, '/');
 		} 
-		else {	
+		else {  
 			return filepath;
 		}
 	};
