@@ -305,7 +305,7 @@ aws_s3: {
     accessKeyId: '<%= aws.AWSAccessKeyId %>', // Use the variables
     secretAccessKey: '<%= aws.AWSSecretKey %>', // You can also use env variables
     region: 'eu-west-1',
-    uploadConcurrency: 5 // 5 simultaneous uploads
+    uploadConcurrency: 5, // 5 simultaneous uploads
     downloadConcurrency: 5 // 5 simultaneous downloads
   },
   staging: {
@@ -340,7 +340,7 @@ aws_s3: {
   },
   clean_production: {
     options: {
-      bucket: 'my-wonderful-production-bucket'
+      bucket: 'my-wonderful-production-bucket',
       debug: true // Doesn't actually delete but shows log
     },
     files: [
