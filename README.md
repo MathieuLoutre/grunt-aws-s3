@@ -375,7 +375,8 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2014-04-26   v0.8.2   Fix bug in setImmediate support detection
+* 2014-04-26   v0.8.3   Fix bug in setImmediate support detection
+* 2014-04-26   v0.8.2   Unpublished because of faulty version
 * 2014-01-09   v0.8.1   Shim setImmediate to support Node 0.8.x
 * 2014-01-08   v0.8.0   Refactor to add stream option. Exclude option. Fixes.
 * 2013-11-27   v0.7.2   Follow Grunt 0.4.2 guidelines, add more options, fix download bugs
