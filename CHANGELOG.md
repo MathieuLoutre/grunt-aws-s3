@@ -1,9 +1,9 @@
 # CHANGELOG
 
-### v0.8.3
+### v0.8.4
 - Fix bug in setImmediate support detection (was using the shim even on Node 0.10.x)
 
-### v0.8.2
+### v0.8.2-3
 - Unpublished because the attempt to better detect setImmediate was faulty
 
 ### v0.8.1

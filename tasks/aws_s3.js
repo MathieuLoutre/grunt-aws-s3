@@ -16,24 +16,7 @@ var mime = require('mime');
 var _ = require('lodash');
 var async = require('async');
 
-// For compatibility with Node 0.8.x
-if (!setImmediate) {
-
-	// from https://github.com/joyent/node/pull/736#issuecomment-9887057
-	var setImmediate = function (callback) {
-
-		var args = arguments;
-		
-		if (args.length > 1) {
-			process.nextTick(function () {
-				callback.apply(null, Array.prototype.slice.call(args, 1));
-			});
-		} 
-		else {
-			process.nextTick(callback);
-		}
-	};
-}
+require('setimmediate'); // For compatibility with Node 0.8.x
 
 module.exports = function (grunt) {
 
