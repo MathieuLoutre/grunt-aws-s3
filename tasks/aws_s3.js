@@ -36,7 +36,7 @@ module.exports = function (grunt) {
 			mock: false,
 			differential: false,
 			stream: false,
-			diffChangesOnly: false
+			displayChangesOnly: false
 		});
 
 		// To deprecate
@@ -729,7 +729,7 @@ module.exports = function (grunt) {
 							uploaded++;
 							grunt.log.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
 						}
-						else if (!options.diffChangesOnly) {
+						else if (!options.displayChangesOnly) {
 							grunt.log.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
 						}
 					});

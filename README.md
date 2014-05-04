@@ -144,7 +144,7 @@ In order to be able to compare to the local file names, it is necessary for `des
   {cwd: 'dist/scripts/', dest: 'scripts/', 'action': 'download', differential: true}
 ```
 
-#### options.diffChangesOnly
+#### options.displayChangesOnly
 Type: `Boolean`
 Default: `false`
 
