@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.8.5 
+- New option to display changes only
+
 ### v0.8.4
 - Fix bug in setImmediate support detection (was using the shim even on Node 0.10.x)
 
