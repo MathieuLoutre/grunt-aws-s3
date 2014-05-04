@@ -144,6 +144,12 @@ In order to be able to compare to the local file names, it is necessary for `des
   {cwd: 'dist/scripts/', dest: 'scripts/', 'action': 'download', differential: true}
 ```
 
+#### options.displayChangesOnly
+Type: `Boolean`
+Default: `false`
+
+If enabled, only lists files that have changed when performing a differential upload.
+
 ### Actions
 
 This Grunt task supports three modes of interaction with S3, `upload`, `download` and `delete`. Every action that you specify is executed serially, one after the other. If multiple `upload` actions are one after the other, they will be grouped together.
