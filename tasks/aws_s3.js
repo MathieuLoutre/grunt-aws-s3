@@ -15,6 +15,7 @@ var AWS = require('aws-sdk');
 var mime = require('mime-types');
 var _ = require('lodash');
 var async = require('async');
+var zlib = require('zlib');
 var Progress = require('progress');
 
 module.exports = function (grunt) {
@@ -38,7 +39,9 @@ module.exports = function (grunt) {
 			differential: false,
 			stream: false,
 			displayChangesOnly: false,
-			progress : 'dots'
+			progress : 'dots',
+			gzip: true,
+			excludedFromGzip: []
 		});
 
 		// To deprecate
@@ -49,7 +52,9 @@ module.exports = function (grunt) {
 
 		var filePairOptions = {
 			differential: options.differential, 
-			stream: options.stream, 
+			stream: options.stream,
+			gzip: options.gzip,
+			excludedFromGzip: options.excludedFromGzip,
 			flipExclude: false, 
 			exclude: false
 		};
@@ -109,6 +114,10 @@ module.exports = function (grunt) {
 				var local_stream = fs.ReadStream(options.file_path);
 				var hash = crypto.createHash('md5');
 
+                if (options.gzip) {
+                    local_stream = local_stream.pipe(zlib.createGzip());
+                }
+
 				local_stream.on('end', function () {
 					// S3's ETag has quotes around it...
 					callback(null, '"' + hash.digest('hex') + '"');
@@ -124,7 +133,13 @@ module.exports = function (grunt) {
 			}
 			else {
 				var local_buffer = grunt.file.read(options.file_path, { encoding: null });
-				callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+                if (options.gzip) {
+                    zlib.gzip(local_buffer, function(err, compressed) {
+                        callback(err, err ? null : crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+                    });
+                } else {
+                    callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+                }
 			}
 		};
 
@@ -230,7 +245,7 @@ module.exports = function (grunt) {
 
 				_.defaults(filePair, filePairOptions);
 
-				if (!filePair.dest) {
+				if (!filePair.dest && filePair.dest !== '') {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
 				}
 				else if (filePair.differential && !filePair.cwd) {
@@ -589,6 +604,7 @@ module.exports = function (grunt) {
 						object.stream = task.stream;
 						object.need_download = _.last(object.dest) !== '/'; // no need to write directories
 						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
+                        object.gzip = task.gzip && !grunt.file.isMatch({matchBase: true}, task.excludedFromGzip, object.Key);
 
 						if (task.exclude && task.flipExclude) {
 							object.excluded = !object.excluded;
@@ -605,7 +621,8 @@ module.exports = function (grunt) {
 									file_path: object.dest, 
 									server_hash: object.ETag, 
 									server_date: object.LastModified, 
-									date_compare: 'older' 
+									date_compare: 'older',
+                                    gzip: object.gzip
 								};
 
 								isFileDifferent(check_options, function (err, different) {
@@ -673,16 +690,52 @@ module.exports = function (grunt) {
 					ACL: options.access
 				}, object.params);
 
+                if (object.gzip) {
+                    upload.ContentEncoding = 'gzip';
+                }
+
+                var wrapped_callback = function() {
+                    s3.putObject(upload, function (err) {
+                        callback(err, true);
+                    });
+                };
+
+                console.log('object: ' + JSON.stringify(object, null, 4));
 				if (object.stream) {
-					upload.Body = fs.createReadStream(object.src);
+					var file_stream = fs.createReadStream(object.src);
+                    if (object.gzip) {
+                        // Can't use putObject with gzip stream - need to know length in advance
+
+                        var chunks = [];
+                        file_stream = file_stream.pipe(zlib.createGzip());
+                        file_stream.on('data', function(chunk) {
+                            chunks.push(chunk);
+                        });
+                        file_stream.on('end', function() {
+                            upload.Body = Buffer.concat(chunks);
+                            wrapped_callback();
+                        });
+                    } else {
+                        upload.Body = file_stream;
+                        wrapped_callback();
+                    }
 				}
 				else {
-					upload.Body = grunt.file.read(object.src, { encoding: null });
+                    var file_contents = grunt.file.read(object.src, { encoding: null });
+                    if (object.gzip) {
+                        zlib.gzip(file_contents, function(err, compressed) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                upload.Body = compressed;
+                                wrapped_callback();
+                            }
+                        });
+                    } else {
+                        upload.Body = file_contents;
+                        wrapped_callback();
+                    }
 				}
-
-				s3.putObject(upload, function (err, data) {
-					callback(err, true);
-				});
 			}
 			else {
 				callback(null, false);
@@ -697,11 +750,13 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
+                    object.gzip = object.gzip && !grunt.file.isMatch({matchBase: true}, object.excludedFromGzip, object.src);
+
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
 					if (server_file && object.differential) {
 
-						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag }, function (err, different) {
+						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag, gzip: object.gzip }, function (err, different) {
 							object.need_upload = different;
 							setImmediate(doUpload, object, uploadCallback);
 						});
