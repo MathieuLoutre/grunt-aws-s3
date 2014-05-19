@@ -38,7 +38,8 @@ module.exports = function (grunt) {
 			differential: false,
 			stream: false,
 			displayChangesOnly: false,
-            gzip: true
+            gzip: true,
+            excludedFromGzip: []
 		});
 
 		// To deprecate
@@ -51,6 +52,7 @@ module.exports = function (grunt) {
 			differential: options.differential, 
 			stream: options.stream,
             gzip: options.gzip,
+            excludedFromGzip: options.excludedFromGzip,
 			flipExclude: false, 
 			exclude: false 
 		};
@@ -287,7 +289,7 @@ module.exports = function (grunt) {
 					filePair.params = _.defaults(filePair.params || {}, options.params);
 					_.defaults(filePair, filePairOptions);
 
-					filePair.src.forEach(function (src) {
+                    filePair.src.forEach(function (src) {
 
 						// Prevents creating empty folders
 						if (!grunt.file.isDir(src)) {
@@ -493,7 +495,7 @@ module.exports = function (grunt) {
 						object.stream = task.stream;
 						object.need_download = _.last(object.dest) !== '/'; // no need to write directories
 						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
-                        object.gzip = task.gzip;
+                        object.gzip = task.gzip && !grunt.file.isMatch({matchBase: true}, task.excludedFromGzip, object.Key);
 
 						if (task.exclude && task.flipExclude) {
 							object.excluded = !object.excluded;
@@ -625,12 +627,16 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
-					var server_file = _.where(server_files, { Key: object.dest })[0];
+                    object.gzip = object.gzip && !grunt.file.isMatch({matchBase: true}, object.excludedFromGzip, object.src);
 
-					if (server_file && object.differential) {
-
-						isFileDifferent(
-                            { file_path: object.src, server_hash: server_file.ETag, gzip: object.gzip },
+                    var server_file;
+					if (object.differential && (server_file = _.find(server_files, { Key: object.dest }))) {
+                        isFileDifferent(
+                            {
+                                file_path: object.src,
+                                server_hash: server_file.ETag,
+                                gzip: object.gzip
+                            },
                             function (err, different) {
 							    object.need_upload = different;
 							    setImmediate(doUpload, object, uploadCallback);
@@ -651,7 +657,6 @@ module.exports = function (grunt) {
 				upload_queue.push(task.files, function (err, uploaded) {
 
 					if (err) {
-                        console.log(JSON.stringify(err, null, 4));
 						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
 					}
 					else {
@@ -779,15 +784,19 @@ module.exports = function (grunt) {
 						var task = this.data;
 						var downloaded = 0;
 
+                        var printFile = function(file, color, sign) {
+                            grunt.log.writeln('- ' + getObjectURL(file.Key)[color] + ' ' + sign + ' ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest))[color]);
+                        }
+
 						_.each(res, function (file) {
 
 							if (file.need_download && !file.excluded) {
 								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
+                                printFile(file, 'cyan', '->');
 							}
 							else {
-								var sign = (file.excluded) ? ' =/= ' : ' === ';
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + sign + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
+								var sign = (file.excluded) ? '=/=' : '===';
+                                printFile(file, 'yellow', sign);
 							}
 						});
 
