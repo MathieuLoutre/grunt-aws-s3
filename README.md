@@ -1,6 +1,8 @@
-# grunt-aws-s3
+# grunt-aws-s3-gzip
 
 > Interact with AWS S3 using AWS SDK
+
+This is a fork of [grunt-aws-s3](https://github.com/MathieuLoutre/grunt-aws-s3) with added GZip support and other minor improvements.
 
 ## Warning 
 
@@ -13,7 +15,7 @@ This plugin requires Grunt `~0.4.0`
 If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
 
 ```shell
-  npm install grunt-aws-s3 --save-dev
+  npm install grunt-aws-s3-gzip --save-dev
 ```
 
 Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
@@ -146,9 +148,28 @@ In order to be able to compare to the local file names, it is necessary for `des
 
 #### options.displayChangesOnly
 Type: `Boolean`
+
 Default: `false`
 
 If enabled, only lists files that have changed when performing a differential upload.
+
+#### options.gzip
+Type: `Boolean`
+
+Default: `true`
+
+Compress files on the fly using gzip and add the `ContentEncoding: gzip` header.
+
+#### options.excludeFromGzip
+Type: `Array<String>` or `String`
+
+Default: None
+
+If `options.gzip` is specified, files matching this pattern will not be compressed.
+
+```js
+{ gzip: true, excludeFromGzip: ['*.png', '*.jpg', '*.jpeg'] }
+```
 
 ### Actions
 
@@ -312,7 +333,8 @@ aws_s3: {
     secretAccessKey: '<%= aws.AWSSecretKey %>', // You can also use env variables
     region: 'eu-west-1',
     uploadConcurrency: 5, // 5 simultaneous uploads
-    downloadConcurrency: 5 // 5 simultaneous downloads
+    downloadConcurrency: 5, // 5 simultaneous downloads
+    excludeFromGzip: ['*.png', '*.jpg', '*.jpeg']
   },
   staging: {
     options: {
