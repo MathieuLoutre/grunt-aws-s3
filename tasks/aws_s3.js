@@ -661,15 +661,38 @@ module.exports = function (grunt) {
 				});
 			};
 
-			// If some of these files require differential upload we list
-			// the content of the bucket for later checks
-			if (_.some(task.files, function (o) { return o.differential; })) {
-				listObjects('', function (objects) { startUploads(objects); });
-			}
-			else {
-				startUploads([]);
-			}
-		};
+            var unique_dests = _(task.files)
+                .filter('differential')
+                .pluck('dest')
+                .compact()
+                .map(path.dirname)
+                .sort()
+                .uniq(true)
+                .reduce(function(res, dest) {
+                    var last_path = res[res.length - 1];
+                    if (!last_path || dest.indexOf(last_path) !== 0) {
+                        res.push(dest);
+                    }
+                    return res;
+                }, []);
+
+            if (unique_dests.length) {
+                async.mapLimit(unique_dests, options.uploadConcurrency, function(dest, callback) {
+                    listObjects(dest, function(objects) {
+                        callback(null, objects);
+                    });
+                }, function(err, objects) {
+                    if (err) {
+                        callback(err)
+                    } else {
+                        var server_files = Array.prototype.concat.apply([], objects);
+                        startUploads(server_files);
+                    }
+                });
+            } else {
+                startUploads([]);
+            }
+        };
 
 		var queue = async.queue(function (task, callback) {
 
