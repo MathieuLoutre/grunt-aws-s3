@@ -15,6 +15,7 @@ var AWS = require('aws-sdk');
 var mime = require('mime');
 var _ = require('lodash');
 var async = require('async');
+var zlib = require('zlib');
 
 require('setimmediate'); // For compatibility with Node 0.8.x
 
@@ -36,7 +37,9 @@ module.exports = function (grunt) {
 			mock: false,
 			differential: false,
 			stream: false,
-			displayChangesOnly: false
+			displayChangesOnly: false,
+            gzip: true,
+            excludedFromGzip: []
 		});
 
 		// To deprecate
@@ -47,7 +50,9 @@ module.exports = function (grunt) {
 
 		var filePairOptions = {
 			differential: options.differential, 
-			stream: options.stream, 
+			stream: options.stream,
+            gzip: options.gzip,
+            excludedFromGzip: options.excludedFromGzip,
 			flipExclude: false, 
 			exclude: false 
 		};
@@ -97,14 +102,21 @@ module.exports = function (grunt) {
 		};
 
 		var hashFile = function (options, callback) {
+            var hash = crypto.createHash('md5');
 
-			if (options.stream) {
+            function getHashString() {
+                // S3's ETag has quotes around it...
+                return '"' + hash.digest('hex') + '"';
+            }
+
+            if (options.stream) {
 				var local_stream = fs.ReadStream(options.file_path);
-				var hash = crypto.createHash('md5');
+                if (options.gzip) {
+                    local_stream = local_stream.pipe(zlib.createGzip());
+                }
 
 				local_stream.on('end', function () {
-					// S3's ETag has quotes around it...
-					callback(null, '"' + hash.digest('hex') + '"');
+					callback(null, getHashString());
 				});
 
 				local_stream.on('error', function (err) {
@@ -117,7 +129,19 @@ module.exports = function (grunt) {
 			}
 			else {
 				var local_buffer = grunt.file.read(options.file_path, { encoding: null });
-				callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+
+                var getHashStringForBuffer = function getHashStringForBuffer(buffer) {
+                    hash.update(buffer);
+                    return getHashString();
+                };
+
+                if (options.gzip) {
+                    zlib.gzip(local_buffer, function(err, compressed) {
+                        callback(err, err ? null : getHashStringForBuffer(compressed));
+                    });
+                } else {
+                    callback(null, getHashStringForBuffer(local_buffer));
+                }
 			}
 		};
 
@@ -265,7 +289,7 @@ module.exports = function (grunt) {
 					filePair.params = _.defaults(filePair.params || {}, options.params);
 					_.defaults(filePair, filePairOptions);
 
-					filePair.src.forEach(function (src) {
+                    filePair.src.forEach(function (src) {
 
 						// Prevents creating empty folders
 						if (!grunt.file.isDir(src)) {
@@ -471,6 +495,7 @@ module.exports = function (grunt) {
 						object.stream = task.stream;
 						object.need_download = _.last(object.dest) !== '/'; // no need to write directories
 						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
+                        object.gzip = task.gzip && !grunt.file.isMatch({matchBase: true}, task.excludedFromGzip, object.Key);
 
 						if (task.exclude && task.flipExclude) {
 							object.excluded = !object.excluded;
@@ -487,7 +512,8 @@ module.exports = function (grunt) {
 									file_path: object.dest, 
 									server_hash: object.ETag, 
 									server_date: object.LastModified, 
-									date_compare: 'older' 
+									date_compare: 'older',
+                                    gzip: object.gzip
 								};
 
 								isFileDifferent(check_options, function (err, different) {
@@ -541,16 +567,52 @@ module.exports = function (grunt) {
 					ACL: options.access
 				}, object.params);
 
+                if (object.gzip) {
+                    upload.ContentEncoding = 'gzip';
+                }
+
+                var wrapped_callback = function() {
+                    s3.putObject(upload, function (err) {
+                        callback(err, true);
+                    });
+                };
+
 				if (object.stream) {
-					upload.Body = fs.createReadStream(object.src);
+					var file_stream = fs.createReadStream(object.src);
+                    if (object.gzip) {
+                        // Can't use putObject with gzip stream - need to know length in advance
+
+                        var chunks = [];
+                        file_stream = file_stream.pipe(zlib.createGzip());
+                        file_stream.on('data', function(chunk) {
+                            chunks.push(chunk);
+                        });
+                        file_stream.on('end', function() {
+                            upload.Body = Buffer.concat(chunks);
+                            wrapped_callback();
+                        });
+                    } else {
+                        upload.Body = file_stream;
+                        wrapped_callback();
+                    }
 				}
 				else {
-					upload.Body = grunt.file.read(object.src, { encoding: null });
+                    var file_contents = grunt.file.read(object.src, { encoding: null });;
+                    if (object.gzip) {
+                        zlib.gzip(file_contents, function(err, compressed) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                upload.Body = compressed;
+                                wrapped_callback();
+                            }
+                        });
+                    } else {
+                        upload.Body = file_contents;
+                        wrapped_callback();
+                    }
 				}
 
-				s3.putObject(upload, function (err, data) {
-					callback(err, true);
-				});
 			}
 			else {
 				callback(null, false);
@@ -565,14 +627,21 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
-					var server_file = _.where(server_files, { Key: object.dest })[0];
+                    object.gzip = object.gzip && !grunt.file.isMatch({matchBase: true}, object.excludedFromGzip, object.src);
 
-					if (server_file && object.differential) {
-
-						isFileDifferent({ file_path: object.src, server_hash: server_file.ETag }, function (err, different) {
-							object.need_upload = different;
-							setImmediate(doUpload, object, uploadCallback);
-						});
+                    var server_file;
+					if (object.differential && (server_file = _.find(server_files, { Key: object.dest }))) {
+                        isFileDifferent(
+                            {
+                                file_path: object.src,
+                                server_hash: server_file.ETag,
+                                gzip: object.gzip
+                            },
+                            function (err, different) {
+							    object.need_upload = different;
+							    setImmediate(doUpload, object, uploadCallback);
+						    }
+                        );
 					}
 					else {
 						setImmediate(doUpload, object, uploadCallback);
@@ -597,15 +666,38 @@ module.exports = function (grunt) {
 				});
 			};
 
-			// If some of these files require differential upload we list
-			// the content of the bucket for later checks
-			if (_.some(task.files, function (o) { return o.differential; })) {
-				listObjects('', function (objects) { startUploads(objects); });
-			}
-			else {
-				startUploads([]);
-			}
-		};
+            var unique_dests = _(task.files)
+                .filter('differential')
+                .pluck('dest')
+                .compact()
+                .map(path.dirname)
+                .sort()
+                .uniq(true)
+                .reduce(function(res, dest) {
+                    var last_path = res[res.length - 1];
+                    if (!last_path || dest.indexOf(last_path) !== 0) {
+                        res.push(dest);
+                    }
+                    return res;
+                }, []);
+
+            if (unique_dests.length) {
+                async.mapLimit(unique_dests, options.uploadConcurrency, function(dest, callback) {
+                    listObjects(dest, function(objects) {
+                        callback(null, objects);
+                    });
+                }, function(err, objects) {
+                    if (err) {
+                        callback(err)
+                    } else {
+                        var server_files = Array.prototype.concat.apply([], objects);
+                        startUploads(server_files);
+                    }
+                });
+            } else {
+                startUploads([]);
+            }
+        };
 
 		var queue = async.queue(function (task, callback) {
 
@@ -692,15 +784,19 @@ module.exports = function (grunt) {
 						var task = this.data;
 						var downloaded = 0;
 
+                        var printFile = function(file, color, sign) {
+                            grunt.log.writeln('- ' + getObjectURL(file.Key)[color] + ' ' + sign + ' ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest))[color]);
+                        }
+
 						_.each(res, function (file) {
 
 							if (file.need_download && !file.excluded) {
 								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
+                                printFile(file, 'cyan', '->');
 							}
 							else {
-								var sign = (file.excluded) ? ' =/= ' : ' === ';
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + sign + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
+								var sign = (file.excluded) ? '=/=' : '===';
+                                printFile(file, 'yellow', sign);
 							}
 						});
 
