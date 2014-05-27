@@ -167,14 +167,6 @@ module.exports = function (grunt) {
 			});
 		};
 
-		if (!options.accessKeyId && !options.mock) {
-			grunt.warn("Missing accessKeyId in options");
-		}
-
-		if (!options.secretAccessKey && !options.mock) {
-			grunt.warn("Missing secretAccessKey in options");
-		}
-
 		if (!options.bucket) {
 			grunt.warn("Missing bucket in options");
 		}
