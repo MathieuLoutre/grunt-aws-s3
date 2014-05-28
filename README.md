@@ -86,7 +86,7 @@ Number of download in parallel. By default, there's no concurrency. Must be > 0.
 #### options.params
 Type: `Object`
 
-A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `ControlCache` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
+A hash of the params you want to apply to the files. Useful to set the `ContentEncoding` to `gzip` for instance, or set the `CacheControl` value. The list of parameters can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property). `params` will apply to *all* the files in the target. However, the `params` option in the file list has priority over it.
 
 #### options.mime
 Type: `Object`  
