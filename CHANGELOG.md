@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.8.6
+- Don't check for credentials to allow IAM use by @joshuaspence
+
 ### v0.8.5 
 - New option to display changes only
 

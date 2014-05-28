@@ -381,6 +381,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-05-28   v0.8.6   Don't check for credentials to allow IAM use by @joshuaspence
 * 2014-05-04   v0.8.5   New option to display changes only
 * 2014-04-26   v0.8.4   Fix bug in setImmediate support detection
 * 2014-04-26   v0.8.2-3 Unpublished because of faulty version
