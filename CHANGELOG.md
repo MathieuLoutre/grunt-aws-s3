@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.9.0
+- ListObjects for dest instead of the whole bucket by @royra
+- Update AWS SDK to 2.0.0 to fix #30
+
 ### v0.8.6
 - Don't check for credentials to allow IAM use by @joshuaspence
 

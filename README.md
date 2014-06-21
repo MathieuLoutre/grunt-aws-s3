@@ -5,7 +5,9 @@
 ## Warning 
 
 Versions 0.4.0 to 0.5.0 have a bug where `options.params` is ignored.  
-Version 0.8.0 doesn't actually support Node 0.8.x and 0.9.x.
+Version 0.8.0 doesn't actually support Node 0.8.x and 0.9.x.  
+
+It's not recommended to use concurrencies over 100 as you may run into EMFILE/ENOTFOUND errors.
 
 ## Getting Started
 This plugin requires Grunt `~0.4.0`
@@ -381,6 +383,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-06-21   v0.9.0   ListObjects per directory and update SDK to 2.0.0
 * 2014-05-28   v0.8.6   Don't check for credentials to allow IAM use by @joshuaspence
 * 2014-05-04   v0.8.5   New option to display changes only
 * 2014-04-26   v0.8.4   Fix bug in setImmediate support detection
