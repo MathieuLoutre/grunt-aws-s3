@@ -1,7 +1,7 @@
 {
   "name": "grunt-aws-s3-gzip",
   "description": "Interact with AWS S3 using the AWS SDK - with GZip support",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "homepage": "https://github.com/royra/grunt-aws-s3-gzip",
   "author": {
     "name": "Roy Razon",
@@ -32,9 +32,6 @@
     "lodash": "~2.4.0",
     "async": "~0.2.9",
     "setimmediate": "1.0.x"
-  },
-   "scripts": {
-    "test": "grunt"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
