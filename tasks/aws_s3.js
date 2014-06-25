@@ -249,7 +249,7 @@ module.exports = function (grunt) {
 
 				_.defaults(filePair, filePairOptions);
 
-				if (!filePair.dest) {
+				if (!filePair.dest && filePair.dest !== '') {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
 				}
 				else if (filePair.differential && !filePair.cwd) {
@@ -577,6 +577,7 @@ module.exports = function (grunt) {
                     });
                 };
 
+                console.log('object: ' + JSON.stringify(object, null, 4));
 				if (object.stream) {
 					var file_stream = fs.createReadStream(object.src);
                     if (object.gzip) {
