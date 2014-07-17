@@ -64,7 +64,12 @@ Whether to enable SSL for requests or not.
 #### options.httpOptions
 Type: `Object`  
 
-A set of options to pass to the low-level HTTP request. The list of option can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property)
+A set of options to pass to the low-level HTTP request. The list of options can be found in the [documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property)
+
+#### options.signatureVersion
+Type: `String`  
+
+Change the signature version to sign requests with. Possible values are: 'v2', 'v3', 'v4'.
 
 #### options.access
 Type: `String`  
@@ -383,6 +388,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-07-17   v0.9.1   Add signatureVersion option (by @ivanzhaowy)
 * 2014-06-21   v0.9.0   ListObjects per directory and update SDK to 2.0.0
 * 2014-05-28   v0.8.6   Don't check for credentials to allow IAM use by @joshuaspence
 * 2014-05-04   v0.8.5   New option to display changes only

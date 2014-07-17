@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.9.1
+- Add signatureVersion option (by @ivanzhaowy)
+
 ### v0.9.0
 - ListObjects for dest instead of the whole bucket by @royra
 - Update AWS SDK to 2.0.0 to fix #30
