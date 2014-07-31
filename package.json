@@ -31,10 +31,8 @@
     "mime": "~1.2.9",
     "lodash": "~2.4.0",
     "async": "~0.2.9",
-    "setimmediate": "1.0.x"
-  },
-   "scripts": {
-    "test": "grunt"
+    "setimmediate": "1.0.x",
+    "progress": "~1.1.7"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
