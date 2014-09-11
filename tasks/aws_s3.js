@@ -589,38 +589,46 @@ module.exports = function (grunt) {
 				});
 			};
 
-            var unique_dests = _(task.files)
-                .filter('differential')
-                .pluck('dest')
-                .compact()
-                .map(path.dirname)
-                .sort()
-                .uniq(true)
-                .reduce(function(res, dest) {
-                    var last_path = res[res.length - 1];
-                    if (!last_path || dest.indexOf(last_path) !== 0) {
-                        res.push(dest);
-                    }
-                    return res;
-                }, []);
+			var unique_dests = _(task.files)
+				.filter('differential')
+				.pluck('dest')
+				.compact()
+				.map(path.dirname)
+				.sort()
+				.uniq(true)
+				.reduce(function (res, dest) {
 
-            if (unique_dests.length) {
-                async.mapLimit(unique_dests, options.uploadConcurrency, function(dest, callback) {
-                    listObjects(dest, function(objects) {
-                        callback(null, objects);
-                    });
-                }, function(err, objects) {
-                    if (err) {
-                        callback(err)
-                    } else {
-                        var server_files = Array.prototype.concat.apply([], objects);
-                        startUploads(server_files);
-                    }
-                });
-            } else {
-                startUploads([]);
-            }
-        };
+					var last_path = res[res.length - 1];
+
+					if (!last_path || dest.indexOf(last_path) !== 0) {
+						res.push(dest);
+					}
+
+					return res;
+				}, []);
+
+			// If there's a '.', we need to scan the whole bucket
+			if (unique_dests.indexOf('.') > -1) {
+				unique_dests = ['/'];
+			}
+
+			if (unique_dests.length) {
+				async.mapLimit(unique_dests, options.uploadConcurrency, function (dest, callback) {
+					listObjects(dest, function(objects) {
+						callback(null, objects);
+					});
+				}, function (err, objects) {
+					if (err) {
+						callback(err)
+					} else {
+						var server_files = Array.prototype.concat.apply([], objects);
+						startUploads(server_files);
+					}
+				});
+			} else {
+				startUploads([]);
+			}
+		};
 
 		var queue = async.queue(function (task, callback) {
 
