@@ -157,6 +157,16 @@ Default: `false`
 
 If enabled, only lists files that have changed when performing a differential upload.
 
+#### options.progress
+Type: `String`
+Default: `dots`
+
+Specify the output format for task progress. Valid options are:
+- `dots`: will display one dot for each file, green for success, yellow for failure
+- `progressBar`: will display a progress bar with current/total count and completion eta
+- `none`: will suppress all display of progress
+
+
 ### Actions
 
 This Grunt task supports three modes of interaction with S3, `upload`, `download` and `delete`. Every action that you specify is executed serially, one after the other. If multiple `upload` actions are one after the other, they will be grouped together.

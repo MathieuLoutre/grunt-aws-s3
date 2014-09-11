@@ -15,6 +15,7 @@ var AWS = require('aws-sdk');
 var mime = require('mime');
 var _ = require('lodash');
 var async = require('async');
+var Progress = require('progress');
 
 require('setimmediate'); // For compatibility with Node 0.8.x
 
@@ -36,7 +37,8 @@ module.exports = function (grunt) {
 			mock: false,
 			differential: false,
 			stream: false,
-			displayChangesOnly: false
+			displayChangesOnly: false,
+			progress : 'dots'
 		});
 
 		// To deprecate
@@ -55,6 +57,11 @@ module.exports = function (grunt) {
 		// Replace the AWS SDK by the mock package if we're testing
 		if (options.mock) {
 			AWS = require('mock-aws-s3');
+		}
+
+		if (['dots','progressBar','none'].indexOf(options.progress) < 0){
+			grunt.log.writeln('Invalid progress option; defaulting to dots\n'.yellow);
+			options.progress = 'dots';
 		}
 
 		// List of acceptable params for an upload
@@ -361,6 +368,10 @@ module.exports = function (grunt) {
 					var deleted = [];
 					var calls = 0;
 
+					if(options.progress === 'progressBar'){
+						var progress = new Progress('[:bar] :current/:total :etas', {total : delete_list.length});
+					}
+
 					var end = function (err, data) {
 
 						if (err) {
@@ -370,7 +381,17 @@ module.exports = function (grunt) {
 						}
 						else {
 							deleted = deleted.concat(data.Deleted);
-							grunt.log.write('.'.green);
+							switch(options.progress){
+								case 'progressBar':
+									progress.tick();
+									break;
+								case 'none':
+									break;
+								case 'dots':
+								default:
+									grunt.log.write('.'.green);
+									break;
+							}
 						}
 
 						if (++calls === slices) {
@@ -507,14 +528,28 @@ module.exports = function (grunt) {
 						callback(null, to_download);
 					};
 
+					if(options.progress === 'progressBar'){
+						var progress = new Progress('[:bar] :current/:total :etas', {total : to_download.length});
+					}
+
 					download_queue.push(to_download, function (err, downloaded) {
 
 						if (err) {
 							grunt.fatal('Failed to download ' + getObjectURL(this.data.Key) + '\n' + err);
 						}
 						else {
-							var dot = (downloaded) ? '.'.green : '.'.yellow;
-							grunt.log.write(dot);
+							switch(options.progress){
+								case 'progressBar':
+									progress.tick();
+									break;
+								case 'none':
+									break;
+								case 'dots':
+								default:
+									var dot = (downloaded) ? '.'.green : '.'.yellow;
+									grunt.log.write(dot);
+									break;
+							}
 						}
 					});
 				}
@@ -577,14 +612,28 @@ module.exports = function (grunt) {
 					callback(null, task.files);
 				};
 
+				if(options.progress === 'progressBar'){
+					var progress = new Progress('[:bar] :current/:total :etas', {total : task.files.length});
+				}
+
 				upload_queue.push(task.files, function (err, uploaded) {
 
 					if (err) {
 						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
 					}
 					else {
-						var dot = (uploaded) ? '.'.green : '.'.yellow;
-						grunt.log.write(dot);
+						switch(options.progress){
+							case 'progressBar':
+								progress.tick();
+								break;
+							case 'none':
+								break;
+							case 'dots':
+							default:
+								var dot = (uploaded) ? '.'.green : '.'.yellow;
+								grunt.log.write(dot);
+								break;
+						}
 					}
 				});
 			};
