@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.9.2
+- Progress bar (by @seth-admittedly)
+- Fix #36, differential didn't work at root after `0.9.0`
+
 ### v0.9.1
 - Add signatureVersion option (by @ivanzhaowy)
 
