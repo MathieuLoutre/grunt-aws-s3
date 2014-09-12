@@ -658,7 +658,7 @@ module.exports = function (grunt) {
 
 			// If there's a '.', we need to scan the whole bucket
 			if (unique_dests.indexOf('.') > -1) {
-				unique_dests = ['/'];
+				unique_dests = [''];
 			}
 
 			if (unique_dests.length) {

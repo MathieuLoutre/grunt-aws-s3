@@ -398,7 +398,8 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2014-09-11   v0.9.2   Progress bar (by @seth-admittedly), fix #36
+* 2014-09-12   v0.9.3   Progress bar (by @seth-admittedly), fix #36
+* 2014-09-11   v0.9.2   Unpublished because of incomplete fix for #36
 * 2014-07-17   v0.9.1   Add signatureVersion option (by @ivanzhaowy)
 * 2014-06-21   v0.9.0   ListObjects per directory and update SDK to 2.0.0
 * 2014-05-28   v0.8.6   Don't check for credentials to allow IAM use by @joshuaspence
