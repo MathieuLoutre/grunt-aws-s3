@@ -38,6 +38,11 @@ Type: `String`
 
 The AWS secretAccessKey. You can load it via JSON as shown in the example or use the `AWS_SECRET_ACCESS_KEY` environment variable.
 
+#### options.sessionToken
+Type: `String`
+
+The AWS sessionToken. You can load it via JSON as shown in the example or use the `AWS_SESSION_TOKEN` environment variable.
+
 #### options.bucket (required)
 Type: `String`
 

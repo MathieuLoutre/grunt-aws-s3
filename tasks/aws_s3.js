@@ -29,6 +29,7 @@ module.exports = function (grunt) {
 			access: 'public-read',
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+			sessionToken: process.env.AWS_SESSION_TOKEN,
 			uploadConcurrency: 1,
 			downloadConcurrency: 1,
 			mime: {},
@@ -181,7 +182,8 @@ module.exports = function (grunt) {
 		var s3_options = {
 			bucket: options.bucket,
 			accessKeyId: options.accessKeyId,
-			secretAccessKey: options.secretAccessKey
+			secretAccessKey: options.secretAccessKey,
+			sessionToken: options.sessionToken
 		};
 
 		if (!options.region) {
