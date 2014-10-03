@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.9.4
+- Add session token env variable and option by @azaharakis
+
 ### v0.9.3
 - Progress bar (by @seth-admittedly)
 - Fix #36, differential didn't work at root after `0.9.0`
@@ -32,7 +35,7 @@
 ### v0.8.0
 - If a directory is found during download, it will be skipped (and won't create empty dirs). This happened only a an empty directory has been created manually on S3 (by @nicolindemann)
 - Use a glob pattern to exclude files when downloading a folder (with @nicolindemann)
-- Chaneg dot colour wether the object has been downloaded/uploaded
+- Change dot colour wether the object has been downloaded/uploaded
 - Exclude option for delete
 - Refactor
 - Stream option (with @craigloftus)
