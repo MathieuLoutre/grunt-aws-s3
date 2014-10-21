@@ -716,105 +716,110 @@ module.exports = function (grunt) {
 			done();
 		};
 
-		queue.push(objects, function (err, res) {
-			var object_url = getObjectURL(this.data.dest);
+		if (objects.length === 0) {
+			queue.drain()
+		}
+		else {
+			queue.push(objects, function (err, res) {
+				var object_url = getObjectURL(this.data.dest);
 
-			if (this.data.action === 'delete') {
-				if (err) {
-					if (res && res.length > 0) {
-						grunt.log.writeln('Errors (' + res.length.toString().red + ' objects): ' + _.pluck(res, 'Key').join(', ').red);
+				if (this.data.action === 'delete') {
+					if (err) {
+						if (res && res.length > 0) {
+							grunt.log.writeln('Errors (' + res.length.toString().red + ' objects): ' + _.pluck(res, 'Key').join(', ').red);
+						}
+
+						grunt.fatal('Deletion failed\n' + err.toString());
 					}
+					else {
+						if (res && res.length > 0) {
+							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
-					grunt.fatal('Deletion failed\n' + err.toString());
+							var deleted = 0;
+
+							_.each(res, function (file) {
+
+								if (file.need_delete && !file.excluded) {
+									deleted++;
+									grunt.log.writeln('- ' + file.Key.cyan);
+								}
+								else {
+									var sign = (file.excluded) ? '! ' : '- ';
+									grunt.log.writeln(sign + file.Key.yellow);
+								}
+							});
+
+							this.data.nb_objects = res.length;
+							this.data.deleted = deleted;
+						}
+						else {
+							grunt.log.writeln('Nothing to delete');
+							this.data.nb_objects = 0;
+							this.data.deleted = 0;
+						}
+					}
+				}
+				else if (this.data.action === 'download') {
+					if (err) {
+						grunt.fatal('Download failed\n' + err.toString());
+					}
+					else {
+						if (res && res.length > 0) {                        
+							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+
+							var task = this.data;
+							var downloaded = 0;
+
+							_.each(res, function (file) {
+
+								if (file.need_download && !file.excluded) {
+									downloaded++;
+									grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
+								}
+								else {
+									var sign = (file.excluded) ? ' =/= ' : ' === ';
+									grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + sign + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
+								}
+							});
+
+							this.data.nb_objects = res.length;
+							this.data.downloaded = downloaded || 0;
+						}
+						else {
+							grunt.log.writeln('Nothing to download');
+							this.data.nb_objects = 0;
+							this.data.downloaded = 0;
+						}
+					}
 				}
 				else {
-					if (res && res.length > 0) {
+					if (err) {
+						grunt.fatal('Upload failed\n' + err.toString());
+					}
+					else {
 						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
-						var deleted = 0;
+						var uploaded = 0;
 
 						_.each(res, function (file) {
 
-							if (file.need_delete && !file.excluded) {
-								deleted++;
-								grunt.log.writeln('- ' + file.Key.cyan);
+							if (file.need_upload) {
+								uploaded++;
+								grunt.log.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
 							}
-							else {
-								var sign = (file.excluded) ? '! ' : '- ';
-								grunt.log.writeln(sign + file.Key.yellow);
+							else if (!options.displayChangesOnly) {
+								grunt.log.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
 							}
 						});
 
 						this.data.nb_objects = res.length;
-						this.data.deleted = deleted;
-					}
-					else {
-						grunt.log.writeln('Nothing to delete');
-						this.data.nb_objects = 0;
-						this.data.deleted = 0;
+						this.data.uploaded = uploaded;
 					}
 				}
-			}
-			else if (this.data.action === 'download') {
-				if (err) {
-					grunt.fatal('Download failed\n' + err.toString());
-				}
-				else {
-					if (res && res.length > 0) {                        
-						grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
-						var task = this.data;
-						var downloaded = 0;
-
-						_.each(res, function (file) {
-
-							if (file.need_download && !file.excluded) {
-								downloaded++;
-								grunt.log.writeln('- ' + getObjectURL(file.Key).cyan + ' -> ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).cyan);
-							}
-							else {
-								var sign = (file.excluded) ? ' =/= ' : ' === ';
-								grunt.log.writeln('- ' + getObjectURL(file.Key).yellow + sign + (task.cwd + getRelativeKeyPath(file.Key, task.dest)).yellow);
-							}
-						});
-
-						this.data.nb_objects = res.length;
-						this.data.downloaded = downloaded || 0;
-					}
-					else {
-						grunt.log.writeln('Nothing to download');
-						this.data.nb_objects = 0;
-						this.data.downloaded = 0;
-					}
-				}
-			}
-			else {
-				if (err) {
-					grunt.fatal('Upload failed\n' + err.toString());
-				}
-				else {
-					grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
-
-					var uploaded = 0;
-
-					_.each(res, function (file) {
-
-						if (file.need_upload) {
-							uploaded++;
-							grunt.log.writeln('- ' + file.src.cyan + ' -> ' + (object_url + file.dest).cyan);
-						}
-						else if (!options.displayChangesOnly) {
-							grunt.log.writeln('- ' + file.src.yellow + ' === ' + (object_url + file.dest).yellow);
-						}
-					});
-
-					this.data.nb_objects = res.length;
-					this.data.uploaded = uploaded;
-				}
-			}
-
-			grunt.log.writeln();
-		});
+				grunt.log.writeln();
+			});
+		}
 	});
 
 	var unixifyPath = function (filepath) {
