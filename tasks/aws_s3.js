@@ -17,8 +17,6 @@ var _ = require('lodash');
 var async = require('async');
 var Progress = require('progress');
 
-require('setimmediate'); // For compatibility with Node 0.8.x
-
 module.exports = function (grunt) {
 
 	grunt.registerMultiTask('aws_s3', 'Interact with AWS S3 using the AWS SDK', function () {

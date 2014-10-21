@@ -27,12 +27,11 @@
     "test": "grunt"
   },
   "dependencies": {
-    "aws-sdk": "~2.0.x",
-    "mime": "~1.2.9",
-    "lodash": "~2.4.0",
-    "async": "~0.2.9",
-    "setimmediate": "1.0.x",
-    "progress": "~1.1.7"
+    "aws-sdk": "2.0.x",
+    "mime": "1.2.x",
+    "lodash": "2.4.x",
+    "async": "0.9.x",
+    "progress": "1.1.x"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.2.0",
