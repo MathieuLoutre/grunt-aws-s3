@@ -50,7 +50,7 @@ module.exports = function (grunt) {
 			differential: options.differential, 
 			stream: options.stream, 
 			flipExclude: false, 
-			exclude: false 
+			exclude: false
 		};
 
 		// Replace the AWS SDK by the mock package if we're testing
@@ -58,7 +58,7 @@ module.exports = function (grunt) {
 			AWS = require('mock-aws-s3');
 		}
 
-		if (['dots','progressBar','none'].indexOf(options.progress) < 0){
+		if (['dots','progressBar','none'].indexOf(options.progress) < 0) {
 			grunt.log.writeln('Invalid progress option; defaulting to dots\n'.yellow);
 			options.progress = 'dots';
 		}
@@ -274,6 +274,10 @@ module.exports = function (grunt) {
 							} 
 							else {
 								dest = filePair.dest;
+							}
+
+							if (_.first(dest) === '/') {
+								dest = dest.slice(1);
 							}
 
 							// '.' means that no dest path has been given (root). Nothing to create there.
@@ -612,8 +616,8 @@ module.exports = function (grunt) {
 					callback(null, task.files);
 				};
 
-				if(options.progress === 'progressBar'){
-					var progress = new Progress('[:bar] :current/:total :etas', {total : task.files.length});
+				if (options.progress === 'progressBar') {
+					var progress = new Progress('[:bar] :current/:total :etas', { total : task.files.length });
 				}
 
 				upload_queue.push(task.files, function (err, uploaded) {
