@@ -350,10 +350,10 @@ aws_s3: {
   },
   production: {
     options: {
-      bucket: 'my-wonderful-production-bucket'
+      bucket: 'my-wonderful-production-bucket',
       params: {
         ContentEncoding: 'gzip' // applies to all the files!
-      }
+      },
       mime: {
         'dist/assets/production/LICENCE': 'text/plain'
       }
@@ -361,7 +361,7 @@ aws_s3: {
     files: [
       {expand: true, cwd: 'dist/production/', src: ['**'], dest: 'app/'},
       {expand: true, cwd: 'assets/prod/large', src: ['**'], dest: 'assets/large/', stream: true}, // enable stream to allow large files
-      {expand: true, cwd: 'assets/prod/', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'},
+      {expand: true, cwd: 'assets/prod/', src: ['**'], dest: 'assets/', params: {CacheControl: '2000'}},
       // CacheControl only applied to the assets folder
       // LICENCE inside that folder will have ContentType equal to 'text/plain'
     ]
