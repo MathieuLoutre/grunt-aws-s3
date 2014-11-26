@@ -44,7 +44,7 @@ module.exports = function (grunt) {
 
 		// To deprecate
 		if (options.concurrency !== undefined) {
-			grunt.log.writeln("The concurrency option is deprecated, use uploadConcurrency instead\n".yellow);
+			grunt.log.writeln('The concurrency option is deprecated, use uploadConcurrency instead\n'.yellow);
 			options.uploadConcurrency = options.concurrency;
 		}
 
@@ -192,15 +192,15 @@ module.exports = function (grunt) {
 		};
 
 		if (!options.accessKeyId && !options.mock) {
-			grunt.warn("Missing accessKeyId in options");
+			grunt.warn('Missing accessKeyId in options');
 		}
 
 		if (!options.secretAccessKey && !options.mock) {
-			grunt.warn("Missing secretAccessKey in options");
+			grunt.warn('Missing secretAccessKey in options');
 		}
 
 		if (!options.bucket) {
-			grunt.warn("Missing bucket in options");
+			grunt.warn('Missing bucket in options');
 		}
 
 		var s3_options = {
@@ -210,7 +210,7 @@ module.exports = function (grunt) {
 		};
 
 		if (!options.region) {
-			grunt.log.writeln("No region defined. S3 will default to US Standard\n".yellow);
+			grunt.log.writeln('No region defined. S3 will default to US Standard\n'.yellow);
 		} else {
 			s3_options.region = options.region;
 		}
@@ -360,7 +360,7 @@ module.exports = function (grunt) {
 			listObjects(task.dest, function (to_delete) {
 
 				// List local content if it's a differential task
-				var local_files = (task.differential) ? grunt.file.expand({ cwd: task.cwd }, ["**"]) : [];
+				var local_files = (task.differential) ? grunt.file.expand({ cwd: task.cwd }, ['**']) : [];
 
 				_.each(to_delete, function (o) {
 
@@ -481,7 +481,7 @@ module.exports = function (grunt) {
 			listObjects(task.dest, function (to_download) {
 
 				// List local content if it's a differential task
-				var local_files = (task.differential) ? grunt.file.expand({ cwd: task.cwd }, ["**"]) : [];
+				var local_files = (task.differential) ? grunt.file.expand({ cwd: task.cwd }, ['**']) : [];
 
 				if (to_download.length === 0) {
 					callback(null, null);
@@ -598,7 +598,7 @@ module.exports = function (grunt) {
                     }
 				}
 				else {
-                    var file_contents = grunt.file.read(object.src, { encoding: null });;
+                    var file_contents = grunt.file.read(object.src, { encoding: null });
                     if (object.gzip) {
                         zlib.gzip(file_contents, function(err, compressed) {
                             if (err) {
@@ -659,8 +659,7 @@ module.exports = function (grunt) {
 
 					if (err) {
 						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
-					}
-					else {
+					} else {
 						var dot = (uploaded) ? '.'.green : '.'.yellow;
 						grunt.log.write(dot);
 					}
@@ -689,7 +688,7 @@ module.exports = function (grunt) {
                     });
                 }, function(err, objects) {
                     if (err) {
-                        callback(err)
+                        callback(err);
                     } else {
                         var server_files = Array.prototype.concat.apply([], objects);
                         startUploads(server_files);
@@ -717,10 +716,10 @@ module.exports = function (grunt) {
 
 			_.each(objects, function (o) {
 
-				if (o.action === "delete") {
+				if (o.action === 'delete') {
 					grunt.log.writeln(o.deleted.toString().green + '/' + o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket + '/' + o.dest).green);
 				}
-				else if (o.action === "download") {
+				else if (o.action === 'download') {
 					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
 				}
 				else {
@@ -729,7 +728,7 @@ module.exports = function (grunt) {
 			});
 
 			if (options.debug) {
-				grunt.log.writeln("\nThe debug option was enabled, no changes have actually been made".yellow);
+				grunt.log.writeln('\nThe debug option was enabled, no changes have actually been made'.yellow);
 			}
 
 			done();
@@ -787,7 +786,7 @@ module.exports = function (grunt) {
 
                         var printFile = function(file, color, sign) {
                             grunt.log.writeln('- ' + getObjectURL(file.Key)[color] + ' ' + sign + ' ' + (task.cwd + getRelativeKeyPath(file.Key, task.dest))[color]);
-                        }
+                        };
 
 						_.each(res, function (file) {
 
