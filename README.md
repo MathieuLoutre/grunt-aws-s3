@@ -191,7 +191,7 @@ Default: `true`
 
 Compress files on the fly using gzip and add the `ContentEncoding: gzip` header.
 
-#### options.excludeFromGzip
+#### options.excludedFromGzip
 Type: `Array<String>` or `String`
 
 Default: None
@@ -199,7 +199,7 @@ Default: None
 If `options.gzip` is specified, files matching this pattern will not be compressed.
 
 ```js
-{ gzip: true, excludeFromGzip: ['*.png', '*.jpg', '*.jpeg'] }
+{ gzip: true, excludedFromGzip: ['*.png', '*.jpg', '*.jpeg'] }
 ```
 
 ### Actions
@@ -383,7 +383,7 @@ aws_s3: {
     region: 'eu-west-1',
     uploadConcurrency: 5, // 5 simultaneous uploads
     downloadConcurrency: 5, // 5 simultaneous downloads
-    excludeFromGzip: ['*.png', '*.jpg', '*.jpeg']
+    excludedFromGzip: ['*.png', '*.jpg', '*.jpeg']
   },
   staging: {
     options: {
