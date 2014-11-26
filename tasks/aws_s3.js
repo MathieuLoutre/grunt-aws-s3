@@ -245,7 +245,7 @@ module.exports = function (grunt) {
 
 				_.defaults(filePair, filePairOptions);
 
-				if (!filePair.dest && filePair.dest !== '') {
+				if (!filePair.dest) {
 					grunt.fatal('No "dest" specified for deletion. No need to specify a "src"');
 				}
 				else if (filePair.differential && !filePair.cwd) {
