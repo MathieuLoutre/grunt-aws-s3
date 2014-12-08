@@ -24,6 +24,8 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
   grunt.loadNpmTasks('grunt-aws-s3');
 ```
 
+Make sure that your AWS IAM policy allows ```s3:GetObject```, ```s3:GetObjectAcl```, ```s3:ListBucket```, ```s3:PutObject```, and ```s3:PutObjectAcl``` on everything under the buckets you plan to deploy to.  This task sets ACL properties, so you can easily find yourself in a situation where tools like s3cmd have no problem deploying files to your bucket, while this task fails with "AccessDenied".
+
 ## The "aws_s3" task
 
 ### Options
