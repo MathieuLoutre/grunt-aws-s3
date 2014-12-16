@@ -186,8 +186,13 @@ module.exports = function (grunt) {
 
 		if (!options.region) {
 			grunt.log.writeln("No region defined. S3 will default to US Standard\n".yellow);
-		} else {
+		} 
+		else {
 			s3_options.region = options.region;
+		}
+
+		if (options.endpoint) {
+			s3_options.endpoint = options.endpoint;
 		}
 
 		if (options.params) {
