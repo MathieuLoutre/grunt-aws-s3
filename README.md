@@ -50,6 +50,11 @@ Type: `String`
 
 The AWS bucket name you want to upload to.
 
+#### options.endpoint
+Type: `String`
+
+The AWS endpoint you'd like to use. Set by default by the region.
+
 #### options.region
 Type: `String`  
 Default: `US Standard`
@@ -405,6 +410,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2014-10-03   v0.10.0  Endpoint option. Drop support for 0.8.x. Fixes.
 * 2014-10-03   v0.9.4   Add session token env variable and option
 * 2014-09-12   v0.9.3   Progress bar (by @seth-admittedly), fix #36
 * 2014-09-11   v0.9.2   Unpublished because of incomplete fix for #36

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+### v0.10.0
+- Endpoint option. 
+- Drop support for 0.8.x. 
+- Fix uploading an empty dir #40
+- Unify dest base format #44
+- FIx uploading no files #46
+
 ### v0.9.4
 - Add session token env variable and option by @azaharakis
 
