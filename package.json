@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "aws-sdk": "2.0.x",
-    "mime": "1.2.x",
+    "mime-types": "2.0.x",
     "lodash": "2.4.x",
     "async": "0.9.x",
     "progress": "1.1.x"
