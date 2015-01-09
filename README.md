@@ -410,6 +410,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-01-09   v0.10.0  Create proper Content-type header with charset by @jeantil
 * 2014-10-03   v0.10.0  Endpoint option. Drop support for 0.8.x. Fixes.
 * 2014-10-03   v0.9.4   Add session token env variable and option
 * 2014-09-12   v0.9.3   Progress bar (by @seth-admittedly), fix #36

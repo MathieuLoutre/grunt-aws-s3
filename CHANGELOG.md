@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.10.1
+- Fix charset with new mime package by @jeantil
+
 ### v0.10.0
 - Endpoint option. 
 - Drop support for 0.8.x. 
