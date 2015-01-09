@@ -12,7 +12,7 @@ var path = require('path');
 var fs = require('fs');
 var crypto = require('crypto');
 var AWS = require('aws-sdk');
-var mime = require('mime');
+var mime = require('mime-types');
 var _ = require('lodash');
 var async = require('async');
 var Progress = require('progress');
@@ -569,7 +569,7 @@ module.exports = function (grunt) {
 
 			if (object.need_upload && !options.debug) {
 
-				var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
+				var type = options.mime[object.src] || object.params.ContentType || mime.contentType(object.src);
 				var upload = _.defaults({
 					ContentType: type,
 					Key: object.dest,
