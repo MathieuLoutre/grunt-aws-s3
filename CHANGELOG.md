@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### v0.10.2
+### v0.10.3
 - Use correct method in mime type lib by @takeno
 
 ### v0.10.1
