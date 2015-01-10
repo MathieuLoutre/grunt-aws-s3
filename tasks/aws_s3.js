@@ -569,7 +569,7 @@ module.exports = function (grunt) {
 
 			if (object.need_upload && !options.debug) {
 
-				var type = options.mime[object.src] || object.params.ContentType || mime.contentType(object.src);
+				var type = options.mime[object.src] || object.params.ContentType || mime.lookup(object.src);
 				var upload = _.defaults({
 					ContentType: type,
 					Key: object.dest,
