@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.10.2
+- Use correct method in mime type lib by @takeno
+
 ### v0.10.1
 - Fix charset with new mime package by @jeantil
 
