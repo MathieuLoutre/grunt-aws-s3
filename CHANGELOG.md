@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.10.4
+- Fix encoding in mime type (w/ @jeantil)
+
 ### v0.10.3
 - Use correct method in mime type lib by @takeno
 

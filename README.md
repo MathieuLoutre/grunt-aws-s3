@@ -410,7 +410,9 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-01-13   v0.10.4  Fix encoding in mime type (w/ @jeantil)
 * 2015-01-09   v0.10.3  Fix method for new mime type lib by @takeno
+* 2015-01-09   v0.10.2  Unpublished because of incomplete fix
 * 2015-01-09   v0.10.1  Create proper Content-type header with charset by @jeantil (unpublished)
 * 2014-10-03   v0.10.0  Endpoint option. Drop support for 0.8.x. Fixes.
 * 2014-10-03   v0.9.4   Add session token env variable and option
