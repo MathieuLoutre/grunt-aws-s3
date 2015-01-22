@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.11.0
+- Support for copy action
+
 ### v0.10.4
 - Fix encoding in mime type (w/ @jeantil)
 

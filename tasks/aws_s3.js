@@ -30,6 +30,7 @@ module.exports = function (grunt) {
 			sessionToken: process.env.AWS_SESSION_TOKEN,
 			uploadConcurrency: 1,
 			downloadConcurrency: 1,
+			copyConcurrency: 1,
 			mime: {},
 			params: {},
 			debug: false,
@@ -260,6 +261,24 @@ module.exports = function (grunt) {
 
 				objects.push(_.defaults(filePair, filePairOptions));
 			}
+			else if (filePair.action === 'copy') {
+
+				if (is_expanded) {
+					grunt.fatal('You cannot expand the "src" for copies');
+				}
+				else if (!filePair.dest) {
+					grunt.fatal('No "dest" specified for copies');
+				}
+				else if (filePair.cwd || !filePair.src) {
+					grunt.fatal('Specify a "src" but not a "cwd" for copies');
+				}
+
+				pushUploads();
+
+				filePair.dest = (filePair.dest === '/') ? '' : filePair.dest;
+
+				objects.push(_.defaults(filePair, filePairOptions));
+			}
 			else {
 
 				if (filePair.params && !isValidParams(filePair.params)) {
@@ -429,6 +448,83 @@ module.exports = function (grunt) {
 				}
 				else {
 					callback(null, (to_delete.length > 0) ? to_delete : null);
+				}
+			});
+		};
+
+		var doCopy = function (object, callback) {
+
+			if (options.debug || !object.need_copy || object.excluded) {
+				callback(null, false);
+			}
+			else {
+				s3.copyObject({ Key: object.dest, CopySource: encodeURI(options.bucket + '/' + object.Key), Bucket: options.bucket }, function (err, data) {
+					if (err) {
+						callback(err);
+					}
+					else {
+						callback(null, true);
+					}
+				});
+			}
+		};
+
+		var copyObjects = function (task, callback) {
+
+			grunt.log.writeln('Copying the content of ' + getObjectURL(task.orig.src[0]).cyan + ' to ' + getObjectURL(task.dest).cyan);
+
+			// List all the objects using src as the prefix
+			listObjects(task.orig.src[0], function (to_copy) {
+
+				if (to_copy.length === 0) {
+					callback(null, null);
+				}
+				else {
+
+					var copy_queue = async.queue(function (object, copyCallback) {
+
+						var key = getRelativeKeyPath(object.Key, task.orig.src[0]); // Remove the src in the key
+						object.dest = task.dest + key;
+						object.need_copy = _.last(object.dest) !== '/'; // no need to write directories
+						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
+
+						if (task.exclude && task.flipExclude) {
+							object.excluded = !object.excluded;
+						}
+
+						setImmediate(doCopy, object, copyCallback);
+
+					}, options.copyConcurrency);
+
+					copy_queue.drain = function () {
+
+						callback(null, to_copy);
+					};
+
+					if (options.progress === 'progressBar') {
+						var progress = new Progress('[:bar] :current/:total :etas', { total : to_copy.length });
+					}
+
+					copy_queue.push(to_copy, function (err, copied) {
+
+						if (err) {
+							grunt.fatal('Failed to copy ' + getObjectURL(this.data.Key) + '\n' + err);
+						}
+						else {
+							switch (options.progress) {
+								case 'progressBar':
+									progress.tick();
+									break;
+								case 'none':
+									break;
+								case 'dots':
+								default:
+									var dot = (copied) ? '.'.green : '.'.yellow;
+									grunt.log.write(dot);
+									break;
+							}
+						}
+					});
 				}
 			});
 		};
@@ -696,6 +792,9 @@ module.exports = function (grunt) {
 			else if (task.action === 'download') {
 				downloadObjects(task, callback);
 			}
+			else if (task.action === 'copy') {
+				copyObjects(task, callback);
+			}
 			else {
 				uploadObjects(task, callback);
 			}
@@ -710,6 +809,9 @@ module.exports = function (grunt) {
 				}
 				else if (o.action === "download") {
 					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
+				}
+				else if (o.action === "copy") {
+					grunt.log.writeln(o.copied.toString().green + '/' + o.nb_objects.toString().green + ' objects copied from ' + (options.bucket + '/' + o.orig.src[0]).green + ' to ' + (options.bucket + '/' + o.dest).green);
 				}
 				else {
 					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket + '/').green);
@@ -796,6 +898,39 @@ module.exports = function (grunt) {
 							grunt.log.writeln('Nothing to download');
 							this.data.nb_objects = 0;
 							this.data.downloaded = 0;
+						}
+					}
+				}
+				else if (this.data.action === 'copy') {
+					if (err) {
+						grunt.fatal('Copy failed\n' + err.toString());
+					}
+					else {
+						if (res && res.length > 0) {                        
+							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
+
+							var task = this.data;
+							var copied = 0;
+
+							_.each(res, function (file) {
+
+								if (file.need_copy && !file.excluded) {
+									copied++;
+									grunt.log.writeln('- ' + (options.bucket + '/' + file.Key).cyan + ' -> ' + (options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).cyan);
+								}
+								else {
+									var sign = (file.excluded) ? ' =/= ' : ' === ';
+									grunt.log.writeln('- ' + (options.bucket + '/' + file.Key).yellow + sign + (options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).yellow);
+								}
+							});
+
+							this.data.nb_objects = res.length;
+							this.data.copied = copied || 0;
+						}
+						else {
+							grunt.log.writeln('Nothing to copy');
+							this.data.nb_objects = 0;
+							this.data.copied = 0;
 						}
 					}
 				}

@@ -102,6 +102,12 @@ Default: `1`
 
 Number of download in parallel. By default, there's no concurrency. Must be > 0.
 
+#### options.copyConcurrency
+Type: `Integer`  
+Default: `1`
+
+Number of copies in parallel. By default, there's no concurrency. Must be > 0.
+
 #### options.params
 Type: `Object`
 
@@ -321,6 +327,24 @@ If you want to reverse the `exclude` (that is, only what will match the pattern 
 
 In this example, only the files starting with a `.` will be deleted.
 
+#### `copy`
+
+The `copy` action just requires a `src` and a `dest` so:
+
+```js
+  {src: 'app/' dest: 'copy/', 'action': 'delete'}
+```
+
+The `src` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). It will then copy objects to `dest`.
+
+The `copy` action can also take an `exclude` option like so:
+
+```js
+  {src: 'app/' dest: 'copy/', 'action': 'delete', exclude "**/.*"}
+```
+
+The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be copied). `flipExclude` also works.
+
 ### Usage Examples
 
 The example loads the AWS credentials from a JSON file (DO NOT forget to exclude it from your commits).
@@ -350,6 +374,7 @@ aws_s3: {
     },
     files: [
       {dest: 'app/', cwd: 'backup/staging/', action: 'download'},
+      {src: 'app/', cwd: 'copy/', action: 'copy'},
       {expand: true, cwd: 'dist/staging/scripts/', src: ['**'], dest: 'app/scripts/'},
       {expand: true, cwd: 'dist/staging/styles/', src: ['**'], dest: 'app/styles/'},
       {dest: 'src/app', action: 'delete'},
@@ -410,6 +435,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-01-22   v0.11.0  Support for copy action
 * 2015-01-13   v0.10.4  Fix encoding in mime type (w/ @jeantil)
 * 2015-01-09   v0.10.3  Fix method for new mime type lib by @takeno
 * 2015-01-09   v0.10.2  Unpublished because of incomplete fix

@@ -15,6 +15,7 @@ describe('S3', function () {
 		var fourth = AWS.walk(__dirname + '/local/download/fourth');
 		var fifth = AWS.walk(__dirname + '/local/download/fifth');
 		var fifth_bucket = AWS.walk(__dirname + '/local/bucket/fifth');
+		var copies = AWS.walk(__dirname + '/local/bucket/copies');
 
 		expect(first.length).to.equal(1473);
 		expect(second.length).to.equal(1472);
@@ -25,6 +26,7 @@ describe('S3', function () {
 		expect(fourth.length).to.equal(1472);
 		expect(fifth.length).to.equal(560);
 		expect(fifth_bucket.length).to.equal(2);
+		expect(copies.length).to.equal(1473);
 
 		done();
 	});

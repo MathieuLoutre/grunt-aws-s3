@@ -48,6 +48,17 @@ module.exports = function(grunt) {
 					{dest: 'fourth/otters/updated/', cwd: 'test/local/download/fifth/', exclude: "**/yay*", action: 'download'},
 					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'fifth/'},
 					{dest: 'fifth/', exclude: "**/*copy*", flipExclude: true, action: 'delete'},
+					{src: 'first/', dest: 'copies/', action: 'copy'},
+				]
+			},
+			test_live: {
+				options: {
+					bucket: 'grunt-aws-test-bucket',
+					uploadConcurrency: 100,
+					copyConcurrency: 100
+				},
+				files: [
+					{src: 'first/', dest: 'copies/', action: 'copy', exclude: "**/yo copy*"}
 				]
 			},
 		},
