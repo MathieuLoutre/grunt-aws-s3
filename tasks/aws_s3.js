@@ -114,9 +114,9 @@ module.exports = function (grunt) {
 				var local_stream = fs.ReadStream(options.file_path);
 				var hash = crypto.createHash('md5');
 
-                if (options.gzip) {
-                    local_stream = local_stream.pipe(zlib.createGzip());
-                }
+				if (options.gzip) {
+					local_stream = local_stream.pipe(zlib.createGzip());
+				}
 
 				local_stream.on('end', function () {
 					// S3's ETag has quotes around it...
@@ -133,13 +133,13 @@ module.exports = function (grunt) {
 			}
 			else {
 				var local_buffer = grunt.file.read(options.file_path, { encoding: null });
-                if (options.gzip) {
-                    zlib.gzip(local_buffer, function(err, compressed) {
-                        callback(err, err ? null : crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
-                    });
-                } else {
-                    callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
-                }
+				if (options.gzip) {
+					zlib.gzip(local_buffer, function(err, compressed) {
+						callback(err, err ? null : crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+					});
+				} else {
+					callback(null, '"' + crypto.createHash('md5').update(local_buffer).digest('hex') + '"');
+				}
 			}
 		};
 
@@ -604,7 +604,7 @@ module.exports = function (grunt) {
 						object.stream = task.stream;
 						object.need_download = _.last(object.dest) !== '/'; // no need to write directories
 						object.excluded = task.exclude && grunt.file.isMatch(task.exclude, object.Key);
-                        object.gzip = task.gzip && !grunt.file.isMatch({matchBase: true}, task.excludedFromGzip, object.Key);
+						object.gzip = task.gzip && !grunt.file.isMatch({matchBase: true}, task.excludedFromGzip, object.Key);
 
 						if (task.exclude && task.flipExclude) {
 							object.excluded = !object.excluded;
@@ -622,7 +622,7 @@ module.exports = function (grunt) {
 									server_hash: object.ETag, 
 									server_date: object.LastModified, 
 									date_compare: 'older',
-                                    gzip: object.gzip
+									gzip: object.gzip
 								};
 
 								isFileDifferent(check_options, function (err, different) {
@@ -690,51 +690,51 @@ module.exports = function (grunt) {
 					ACL: options.access
 				}, object.params);
 
-                if (object.gzip) {
-                    upload.ContentEncoding = 'gzip';
-                }
+				if (object.gzip) {
+					upload.ContentEncoding = 'gzip';
+				}
 
-                var wrapped_callback = function() {
-                    s3.putObject(upload, function (err) {
-                        callback(err, true);
-                    });
-                };
+				var wrapped_callback = function() {
+					s3.putObject(upload, function (err) {
+						callback(err, true);
+					});
+				};
 
-                console.log('object: ' + JSON.stringify(object, null, 4));
+				console.log('object: ' + JSON.stringify(object, null, 4));
 				if (object.stream) {
 					var file_stream = fs.createReadStream(object.src);
-                    if (object.gzip) {
-                        // Can't use putObject with gzip stream - need to know length in advance
+					if (object.gzip) {
+						// Can't use putObject with gzip stream - need to know length in advance
 
-                        var chunks = [];
-                        file_stream = file_stream.pipe(zlib.createGzip());
-                        file_stream.on('data', function(chunk) {
-                            chunks.push(chunk);
-                        });
-                        file_stream.on('end', function() {
-                            upload.Body = Buffer.concat(chunks);
-                            wrapped_callback();
-                        });
-                    } else {
-                        upload.Body = file_stream;
-                        wrapped_callback();
-                    }
+						var chunks = [];
+						file_stream = file_stream.pipe(zlib.createGzip());
+						file_stream.on('data', function(chunk) {
+							chunks.push(chunk);
+						});
+						file_stream.on('end', function() {
+							upload.Body = Buffer.concat(chunks);
+							wrapped_callback();
+						});
+					} else {
+						upload.Body = file_stream;
+						wrapped_callback();
+					}
 				}
 				else {
-                    var file_contents = grunt.file.read(object.src, { encoding: null });
-                    if (object.gzip) {
-                        zlib.gzip(file_contents, function(err, compressed) {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                upload.Body = compressed;
-                                wrapped_callback();
-                            }
-                        });
-                    } else {
-                        upload.Body = file_contents;
-                        wrapped_callback();
-                    }
+					var file_contents = grunt.file.read(object.src, { encoding: null });
+					if (object.gzip) {
+						zlib.gzip(file_contents, function(err, compressed) {
+							if (err) {
+								callback(err);
+							} else {
+								upload.Body = compressed;
+								wrapped_callback();
+							}
+						});
+					} else {
+						upload.Body = file_contents;
+						wrapped_callback();
+					}
 				}
 			}
 			else {
@@ -750,7 +750,7 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
-                    object.gzip = object.gzip && !grunt.file.isMatch({matchBase: true}, object.excludedFromGzip, object.src);
+					object.gzip = object.gzip && !grunt.file.isMatch({matchBase: true}, object.excludedFromGzip, object.src);
 
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
@@ -928,7 +928,7 @@ module.exports = function (grunt) {
 						grunt.fatal('Download failed\n' + err.toString());
 					}
 					else {
-						if (res && res.length > 0) {                        
+						if (res && res.length > 0) {
 							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 							var task = this.data;
@@ -961,7 +961,7 @@ module.exports = function (grunt) {
 						grunt.fatal('Copy failed\n' + err.toString());
 					}
 					else {
-						if (res && res.length > 0) {                        
+						if (res && res.length > 0) {
 							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 							var task = this.data;
