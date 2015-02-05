@@ -458,7 +458,7 @@ module.exports = function (grunt) {
 				callback(null, false);
 			}
 			else {
-				s3.copyObject({ Key: object.dest, CopySource: encodeURI(options.bucket + '/' + object.Key), Bucket: options.bucket }, function (err, data) {
+				s3.copyObject({ Key: object.dest, CopySource: encodeURIComponent(options.bucket + '/' + object.Key), Bucket: options.bucket }, function (err, data) {
 					if (err) {
 						callback(err);
 					}
