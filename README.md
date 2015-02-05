@@ -184,6 +184,23 @@ Specify the output format for task progress. Valid options are:
 - `progressBar`: will display a progress bar with current/total count and completion eta
 - `none`: will suppress all display of progress
 
+#### options.gzip
+Type: `Boolean`
+
+Default: `true`
+
+Compress files on the fly using gzip and add the `ContentEncoding: gzip` header.
+
+#### options.excludedFromGzip
+Type: `Array<String>` or `String`
+
+Default: None
+
+If `options.gzip` is specified, files matching this pattern will not be compressed.
+
+```js
+{ gzip: true, excludedFromGzip: ['*.png', '*.jpg', '*.jpeg'] }
+```
 
 ### Actions
 
@@ -365,7 +382,8 @@ aws_s3: {
     secretAccessKey: '<%= aws.AWSSecretKey %>', // You can also use env variables
     region: 'eu-west-1',
     uploadConcurrency: 5, // 5 simultaneous uploads
-    downloadConcurrency: 5 // 5 simultaneous downloads
+    downloadConcurrency: 5, // 5 simultaneous downloads
+    excludedFromGzip: ['*.png', '*.jpg', '*.jpeg']
   },
   staging: {
     options: {
