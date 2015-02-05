@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.11.1
+- Fix url encoding for copy action by @ahageali
+
 ### v0.11.0
 - Support for copy action
 

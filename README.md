@@ -435,6 +435,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-01-22   v0.11.1  Fix url encoding for copy action by @ahageali
 * 2015-01-22   v0.11.0  Support for copy action
 * 2015-01-13   v0.10.4  Fix encoding in mime type (w/ @jeantil)
 * 2015-01-09   v0.10.3  Fix method for new mime type lib by @takeno
