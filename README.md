@@ -426,7 +426,7 @@ aws_s3: {
     files: [
       {expand: true, cwd: 'secret_garden/', src: ['*.key'], dest: 'secret/'},
     ]
-  },
+  }
 },
 ```
 
