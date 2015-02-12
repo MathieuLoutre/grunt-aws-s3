@@ -184,6 +184,15 @@ Specify the output format for task progress. Valid options are:
 - `progressBar`: will display a progress bar with current/total count and completion eta
 - `none`: will suppress all display of progress
 
+### gzip
+
+This task doesn't compress anything for you. The `grunt-contrib-compress` task is here for that and is much more suitable.  
+However, uploading gzip files is annoying because you need to set `ContenType` and `ContentEncoding` correctly for each of the compressed files. As of version `0.12.0`, this plugin will try to guess if a file needs to have their `ContenType` and `ContentEncoding` changed relying on a convention rather than configuration (inspired by [hapi](https://github.com/hapijs/hapi/blob/master/API.md#built-in-handlers)).
+
+The convention is that a gzipped file must have `.gz` in its extension as well as its original extension (e.g. `.css`, `.js`) like so: `build.js.gz`.  
+In this case the plugin will apply the `ContenType` from `build.js` to `build.js.gz` and set the `ContentEncoding` to `gzip`.
+
+If for some reason you're not following this convention (e.g. you're naming your files `build.gz`), you can force the ContentType through the `mime` option of the plugin which still has priority. Provided the extension is still `.gz`, the `ContentType` will be set for you.
 
 ### Actions
 
@@ -435,6 +444,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-02-12   v0.12.0  Basic gzip support
 * 2015-01-22   v0.11.1  Fix url encoding for copy action by @ahageali
 * 2015-01-22   v0.11.0  Support for copy action
 * 2015-01-13   v0.10.4  Fix encoding in mime type (w/ @jeantil)

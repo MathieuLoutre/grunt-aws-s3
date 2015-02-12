@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.12.0
+- Add basic gzip support
+
 ### v0.11.1
 - Fix url encoding for copy action by @ahageali
 

@@ -2,7 +2,7 @@
  * grunt-aws-s3
  * https://github.com/MathieuLoutre/grunt-aws-s3
  *
- * Copyright (c) 2013 Mathieu Triay
+ * Copyright (c) 2015 Mathieu Triay
  * Licensed under the MIT license.
  */
 
@@ -665,7 +665,7 @@ module.exports = function (grunt) {
 
 			if (object.need_upload && !options.debug) {
 
-				var lastDot = _.last(object.src, '.')
+				var lastDot = object.src.lastIndexOf('.')
 				var ext = object.src.substr(lastDot)
 
 				if (ext === '.gz') {
