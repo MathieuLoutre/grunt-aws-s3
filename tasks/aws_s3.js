@@ -38,7 +38,7 @@ module.exports = function (grunt) {
 			differential: false,
 			stream: false,
 			displayChangesOnly: false,
-			progress : 'dots'
+			progress: 'dots'
 		});
 
 		// To deprecate
@@ -664,6 +664,15 @@ module.exports = function (grunt) {
 		var doUpload = function (object, callback) {
 
 			if (object.need_upload && !options.debug) {
+
+				var lastDot = _.last(object.src, '.')
+				var ext = object.src.substr(lastDot)
+
+				if (ext === '.gz') {
+
+					object.params.ContentType = mime.contentType(mime.lookup(object.src.substr(0, lastDot)) || "application/octet-stream")
+					object.params.ContentEncoding = 'gzip'
+				}
 
 				var type = options.mime[object.src] || object.params.ContentType || mime.contentType(mime.lookup(object.src) || "application/octet-stream");
 				var upload = _.defaults({
