@@ -666,12 +666,26 @@ module.exports = function (grunt) {
 			if (object.need_upload && !options.debug) {
 
 				var lastDot = object.src.lastIndexOf('.')
-				var ext = object.src.substr(lastDot)
 
-				if (ext === '.gz') {
+				if (object.src.substr(lastDot) === '.gz') {
 
-					object.params.ContentType = mime.contentType(mime.lookup(object.src.substr(0, lastDot)) || "application/octet-stream")
+					var originalPath = object.src.substr(0, lastDot)
+
+					object.params.ContentType = mime.contentType(mime.lookup(originalPath) || "application/octet-stream")
 					object.params.ContentEncoding = 'gzip'
+
+					if (options.gzipRename && object.src.match(/\.[^.]+\.gz$/)) {
+
+						if (options.gzipRename === 'ext') {
+							object.dest = object.dest.replace(/\.gz$/, '')
+						}
+						else if (options.gzipRename === 'gz') {
+							object.dest = object.dest.replace(/\.[^.]+\.gz$/, '.gz')
+						}
+						else if (options.gzipRename === 'swap') {
+							object.dest = object.dest.replace(/(\.[^.]+)\.gz$/, '.gz$1')
+						}
+					}
 				}
 
 				var type = options.mime[object.src] || object.params.ContentType || mime.contentType(mime.lookup(object.src) || "application/octet-stream");

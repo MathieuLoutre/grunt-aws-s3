@@ -184,6 +184,17 @@ Specify the output format for task progress. Valid options are:
 - `progressBar`: will display a progress bar with current/total count and completion eta
 - `none`: will suppress all display of progress
 
+#### options.gzipRename
+Type: `String`
+Default: ``
+
+When using the `gzip` abilities of the task (see below), you can use this option to change the extensions of the files uploaded to S3. Values can be:  
+- `gz`: will replace the compound extension with `.gz` (e.g. `build.css.gz` -> `build.gz`)
+- `ext`: will keep the original extension and remove `.gz` (e.g. `build.css.gz` -> `build.css`)
+- `swap`: will swap the two extensions (e.g. `build.css.gz` -> `build.gz.css`)
+
+This only works with the `gzip` abilities of the task which is based on compound extensions like these: `.css.gz`.
+
 ### gzip
 
 This task doesn't compress anything for you. The `grunt-contrib-compress` task is here for that and is much more suitable.  
@@ -192,7 +203,7 @@ However, uploading gzip files is annoying because you need to set `ContenType` a
 The convention is that a gzipped file must have `.gz` in its extension as well as its original extension (e.g. `.css`, `.js`) like so: `build.js.gz`.  
 In this case the plugin will apply the `ContenType` from `build.js` to `build.js.gz` and set the `ContentEncoding` to `gzip`.
 
-If for some reason you're not following this convention (e.g. you're naming your files `build.gz`), you can force the ContentType through the `mime` option of the plugin which still has priority. Provided the extension is still `.gz`, the `ContentType` will be set for you.
+If for some reason you're not following this convention (e.g. you're naming your files `build.gz`), you can force the ContentType through the `mime` option of the plugin which still has priority. Provided the extension is still `.gz`, the `ContentType` will be set for you. Alternatively, you can use the `gzipRename` option which will be able to rename the files on the fly as they're uploaded to S3.
 
 ### Actions
 
@@ -380,6 +391,7 @@ aws_s3: {
     options: {
       bucket: 'my-wonderful-staging-bucket',
       differential: true // Only uploads the files that have changed
+      gzipRename: 'ext' // when uploading a gz file, keep the original extension
     },
     files: [
       {dest: 'app/', cwd: 'backup/staging/', action: 'download'},
@@ -444,6 +456,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-02-12   v0.12.1  gzipRename option
 * 2015-02-12   v0.12.0  Basic gzip support
 * 2015-01-22   v0.11.1  Fix url encoding for copy action by @ahageali
 * 2015-01-22   v0.11.0  Support for copy action
