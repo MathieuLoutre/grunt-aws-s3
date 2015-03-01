@@ -347,6 +347,10 @@ If you want to reverse the `exclude` (that is, only what will match the pattern 
 
 In this example, only the files starting with a `.` will be deleted.
 
+`dest` is the folder on the bucket that you want to target. At the moment, a globbing pattern shouldn't be in `src` (which would reference local files) but `exclude`. Exclude takes 1 globbing pattern, and can be "flipped" so that it becomes "delete all that match this pattern" rather than "don't delete all that match this pattern".
+
+If you use `differential`, you need to give a `cwd`, which will indicate which folder `dest` is referencing locally. In that case, `differential` will only delete the files on AWS which don't exist locally (look at this in terms of cleaning up if you have changed some assets names or something).
+
 #### `copy`
 
 The `copy` action just requires a `src` and a `dest` so:
