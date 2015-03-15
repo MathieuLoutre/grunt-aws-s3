@@ -661,32 +661,34 @@ module.exports = function (grunt) {
 			});
 		};
 
+		var doGzipRename = function (object, options) {
+			var lastDot = object.src.lastIndexOf('.')
+
+			if (object.src.substr(lastDot) === '.gz') {
+
+				var originalPath = object.src.substr(0, lastDot)
+
+				object.params.ContentType = mime.contentType(mime.lookup(originalPath) || "application/octet-stream")
+				object.params.ContentEncoding = 'gzip'
+
+				if (options.gzipRename && object.src.match(/\.[^.]+\.gz$/)) {
+
+					if (options.gzipRename === 'ext') {
+						object.dest = object.dest.replace(/\.gz$/, '')
+					}
+					else if (options.gzipRename === 'gz') {
+						object.dest = object.dest.replace(/\.[^.]+\.gz$/, '.gz')
+					}
+					else if (options.gzipRename === 'swap') {
+						object.dest = object.dest.replace(/(\.[^.]+)\.gz$/, '.gz$1')
+					}
+				}
+			}
+		};
+
 		var doUpload = function (object, callback) {
 
 			if (object.need_upload && !options.debug) {
-
-				var lastDot = object.src.lastIndexOf('.')
-
-				if (object.src.substr(lastDot) === '.gz') {
-
-					var originalPath = object.src.substr(0, lastDot)
-
-					object.params.ContentType = mime.contentType(mime.lookup(originalPath) || "application/octet-stream")
-					object.params.ContentEncoding = 'gzip'
-
-					if (options.gzipRename && object.src.match(/\.[^.]+\.gz$/)) {
-
-						if (options.gzipRename === 'ext') {
-							object.dest = object.dest.replace(/\.gz$/, '')
-						}
-						else if (options.gzipRename === 'gz') {
-							object.dest = object.dest.replace(/\.[^.]+\.gz$/, '.gz')
-						}
-						else if (options.gzipRename === 'swap') {
-							object.dest = object.dest.replace(/(\.[^.]+)\.gz$/, '.gz$1')
-						}
-					}
-				}
 
 				var type = options.mime[object.src] || object.params.ContentType || mime.contentType(mime.lookup(object.src) || "application/octet-stream");
 				var upload = _.defaults({
@@ -719,6 +721,8 @@ module.exports = function (grunt) {
 			var startUploads = function (server_files) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
+
+					doGzipRename(object, options);
 
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
@@ -896,7 +900,7 @@ module.exports = function (grunt) {
 						grunt.fatal('Download failed\n' + err.toString());
 					}
 					else {
-						if (res && res.length > 0) {                        
+						if (res && res.length > 0) {												
 							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 							var task = this.data;
@@ -929,7 +933,7 @@ module.exports = function (grunt) {
 						grunt.fatal('Copy failed\n' + err.toString());
 					}
 					else {
-						if (res && res.length > 0) {                        
+						if (res && res.length > 0) {												
 							grunt.log.writeln('\nList: (' + res.length.toString().cyan + ' objects):');
 
 							var task = this.data;
@@ -992,7 +996,7 @@ module.exports = function (grunt) {
 		if (process.platform === 'win32') {
 			return filepath.replace(/\\/g, '/');
 		} 
-		else {  
+		else {	
 			return filepath;
 		}
 	};
