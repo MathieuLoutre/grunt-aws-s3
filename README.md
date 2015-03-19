@@ -220,7 +220,7 @@ By default, the action is `upload`.
 #### `upload`
 
 The `upload` action uses the [newest Grunt file format](http://gruntjs.com/configuring-tasks#files), allowing to take advantage of the `expand` and `filter` options.  
-It is the default action, so you can omit `action: 'upload'` if you want a cleaner look.
+It is the default action, so you can omit `action: 'upload'` if you want a cleaner look. Don't forget to set a `dest` (use `dest: '/'` for the root).
 
 ```js
   files: [
