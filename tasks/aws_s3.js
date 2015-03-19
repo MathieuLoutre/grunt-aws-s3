@@ -281,7 +281,10 @@ module.exports = function (grunt) {
 			}
 			else {
 
-				if (filePair.params && !isValidParams(filePair.params)) {
+				if (!filePair.dest) {
+					grunt.fatal("Specify a dest for uploads (e.g. '/' for the root)");
+				}
+				else if (filePair.params && !isValidParams(filePair.params)) {
 					grunt.warn('"params" can only be ' + put_params.join(', '));
 				}
 				else {

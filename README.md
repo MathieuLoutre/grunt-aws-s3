@@ -460,7 +460,8 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
-* 2015-03-16   v0.12.2  make differential work with gzipRename by @dedsm
+* 2015-03-19   v0.12.3  Add warning when no dest is defined
+* 2015-03-16   v0.12.2  make differential work with gzipRename by @dedsm
 * 2015-02-12   v0.12.1  gzipRename option
 * 2015-02-12   v0.12.0  Basic gzip support
 * 2015-01-22   v0.11.1  Fix url encoding for copy action by @ahageali

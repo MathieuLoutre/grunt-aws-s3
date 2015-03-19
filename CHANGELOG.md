@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.12.3
+- Add warning when no dest is defined
+
 ### v0.12.2
 - make differential work with gzipRename by @dedsm
 

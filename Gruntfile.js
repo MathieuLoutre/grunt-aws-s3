@@ -33,6 +33,7 @@ module.exports = function(grunt) {
 					stream: true
 				},
 				files: [
+					{cwd: "test/local/upload/", src: ['**'], stream: false},
 					{expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'first/', stream: false},
 					{dest: '/', cwd: 'test/local/download/backup/', action: 'download', stream: false},
 					{dest: 'first/otters/updated/', action: 'delete'},
