@@ -796,22 +796,44 @@ module.exports = function (grunt) {
 				unique_dests = [''];
 			}
 
-			if (unique_dests.length) {
-				async.mapLimit(unique_dests, options.uploadConcurrency, function (dest, callback) {
-					listObjects(dest, function(objects) {
-						callback(null, objects);
-					});
-				}, function (err, objects) {
-					if (err) {
-						callback(err)
-					} else {
-						var server_files = Array.prototype.concat.apply([], objects);
-						startUploads(server_files);
-					}
-				});
-			} else {
-				startUploads([]);
-			}
+			// make sure of unique destination by
+      // checking the first file.
+      var first = task.files[0];
+      if (first && first.orig && first.orig.uniqueDest) {
+          var dest = first.orig.dest;
+          s3.listObjects({ Prefix: dest, Bucket: options.bucket }, function (err, data) {
+                if (err) {
+                    grunt.fatal('Checking uniqueDest failed\n' + err);
+                    return;
+                }
+              if (data.Contents.length) {
+                  grunt.fatal('destination already exists on s3: ' + dest);
+              } else {
+                  continueUpload()
+              }
+          });
+      } else {
+          continueUpload();
+      }
+
+      function continueUpload(){
+          if (unique_dests.length) {
+              async.mapLimit(unique_dests, options.uploadConcurrency, function (dest, callback) {
+                  listObjects(dest, function(objects) {
+                      callback(null, objects);
+                  });
+              }, function (err, objects) {
+                  if (err) {
+                      callback(err)
+                  } else {
+                      var server_files = Array.prototype.concat.apply([], objects);
+                      startUploads(server_files);
+                  }
+              });
+          } else {
+              startUploads([]);
+          }
+      }
 		};
 
 		var queue = async.queue(function (task, callback) {
