@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### v0.13.0
+- Fix tests
+- new `overwrite` option to prevent overwriting existing files (based on @nickjackson's PR)
+- update mock library
+
 ### v0.12.3
 - Add warning when no dest is defined
 
