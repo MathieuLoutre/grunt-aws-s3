@@ -169,6 +169,12 @@ In order to be able to compare to the local file names, it is necessary for `des
   {cwd: 'dist/scripts/', dest: 'scripts/', 'action': 'download', differential: true}
 ```
 
+#### options.overwrite
+Type: `Boolean`  
+Default: `true`
+
+By setting this options to `false`, you can prevent overwriting files on the server. The task will scan the whole bucket first and if it encounters a path that's about to be erased will stop.
+
 #### options.displayChangesOnly
 Type: `Boolean`
 Default: `false`

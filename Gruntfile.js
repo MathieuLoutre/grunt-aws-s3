@@ -28,12 +28,11 @@ module.exports = function(grunt) {
 			test_local: {
 				options: {
 					bucket: __dirname + '/test/local/bucket',
-					concurrency: 1,
+					uploadConcurrency: 1,
 					mock: true,
 					stream: true
 				},
 				files: [
-					{cwd: "test/local/upload/", src: ['**'], stream: false},
 					{expand: true, cwd: "test/local/upload/", src: ['**'], dest: 'first/', stream: false},
 					{dest: '/', cwd: 'test/local/download/backup/', action: 'download', stream: false},
 					{dest: 'first/otters/updated/', action: 'delete'},
