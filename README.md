@@ -466,6 +466,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-05-14   v0.13.1  Fix ACL on copy by @rayd
 * 2015-03-19   v0.13.0  New option to prevent overwriting files
 * 2015-03-19   v0.12.3  Add warning when no dest is defined
 * 2015-03-16   v0.12.2  make differential work with gzipRename by @dedsm

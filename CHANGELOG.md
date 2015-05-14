@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.13.1
+- Fix ACL on copy by @rayd
+
 ### v0.13.0
 - Fix tests
 - new `overwrite` option to prevent overwriting existing files (based on @nickjackson's PR)
