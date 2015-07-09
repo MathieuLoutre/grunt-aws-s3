@@ -190,6 +190,13 @@ Specify the output format for task progress. Valid options are:
 - `progressBar`: will display a progress bar with current/total count and completion eta
 - `none`: will suppress all display of progress
 
+#### options.changedFiles
+Type: `String`
+Default: `aws_s3_changed`
+
+This tasks exports the list of uploaded files to a variable on the grunt config so it can be used by another task (`grunt-invalidate-cloudfront` for instance). By default it's accessible via `grunt.config.get('aws_s3_changed')` and this option allows you to change the variable name.
+
+
 #### options.gzipRename
 Type: `String`
 Default: ``
@@ -466,6 +473,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-07-09   v0.14.0  Export uploaded files to grunt config (idea from @srlmproductions)
 * 2015-05-14   v0.13.1  Fix ACL on copy by @rayd
 * 2015-03-19   v0.13.0  New option to prevent overwriting files
 * 2015-03-19   v0.12.3  Add warning when no dest is defined

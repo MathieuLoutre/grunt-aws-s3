@@ -8,7 +8,7 @@
 
 'use strict';
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
 	grunt.registerTask('create_bucket', 'creates the bucket folder', function() {
 		grunt.file.mkdir(__dirname + '/test/local/bucket');
@@ -58,11 +58,10 @@ module.exports = function(grunt) {
 					copyConcurrency: 100
 				},
 				files: [
-					{src: 'first/', dest: 'copies/', action: 'copy', exclude: "**/yo copy*"}
+					{expand: true, cwd: "test/local/upload/", src: ['otters/animal.txt'], dest: 'first/', stream: false},
 				]
 			},
 		},
-
 		mochaTest: {
 			test: {
 				options: {

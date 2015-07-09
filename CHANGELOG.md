@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.14.0
+- Export uploaded files to grunt config (an idea from @srlmproductions)
+
 ### v0.13.1
 - Fix ACL on copy by @rayd
 

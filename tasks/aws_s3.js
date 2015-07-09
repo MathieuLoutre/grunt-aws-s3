@@ -39,7 +39,8 @@ module.exports = function (grunt) {
 			stream: false,
 			displayChangesOnly: false,
 			progress: 'dots',
-			overwrite: true
+			overwrite: true,
+			changedFiles: 'aws_s3_changed'
 		});
 
 		// To deprecate
@@ -857,7 +858,21 @@ module.exports = function (grunt) {
 				grunt.log.writeln("\nThe debug option was enabled, no changes have actually been made".yellow);
 			}
 
-			done();
+			var uploadedFiles = []
+
+			_.each(objects, function (o) {
+				if (!o.action || o.action === 'upload') {	
+					_.each(o.files, function (file) {
+						if (file.need_upload) {
+							uploadedFiles.push(file.dest)
+						}
+					});
+				}
+			})
+
+			grunt.config.set(options.changedFiles, uploadedFiles)
+
+			done()
 		};
 
 		if (objects.length === 0) {
