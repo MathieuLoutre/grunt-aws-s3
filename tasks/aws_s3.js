@@ -226,6 +226,10 @@ module.exports = function (grunt) {
 
 		this.files.forEach(function (filePair) {
 
+			if (filePair.exclude && grunt.file.isMatch(filePair.exclude, filePair.src)) {
+				return;
+			}
+
 			is_expanded = filePair.orig.expand || false;
 
 			if (filePair.action === 'delete') {
