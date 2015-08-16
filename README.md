@@ -407,7 +407,7 @@ aws_s3: {
   staging: {
     options: {
       bucket: 'my-wonderful-staging-bucket',
-      differential: true // Only uploads the files that have changed
+      differential: true, // Only uploads the files that have changed
       gzipRename: 'ext' // when uploading a gz file, keep the original extension
     },
     files: [
