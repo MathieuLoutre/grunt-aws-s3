@@ -122,7 +122,7 @@ The keys are the local file paths and the values are the MIME types.
 ```js
   {
     'path/to/file': 'application/json',
-    'path to/other/file': 'application/gzip'
+    'path/to/other/file': 'application/gzip'
   }
 ```
 
