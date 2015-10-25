@@ -673,8 +673,10 @@ module.exports = function (grunt) {
 
 				var originalPath = object.src.substr(0, lastDot)
 
-				object.params.ContentType = mime.contentType(mime.lookup(originalPath) || "application/octet-stream")
-				object.params.ContentEncoding = 'gzip'
+				object.params = _.defaults({
+					ContentType: mime.contentType(mime.lookup(originalPath) || "application/octet-stream"),
+					ContentEncoding: 'gzip'
+				}, object.params || {})
 
 				if (options.gzipRename && object.src.match(/\.[^.]+\.gz$/)) {
 
@@ -728,6 +730,8 @@ module.exports = function (grunt) {
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
 					doGzipRename(object, options);
+
+					console.log(object)
 
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
