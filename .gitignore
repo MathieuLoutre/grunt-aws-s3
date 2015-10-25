@@ -18,3 +18,5 @@ node_modules
 /test/local
 
 .env
+
+.DS_Store
