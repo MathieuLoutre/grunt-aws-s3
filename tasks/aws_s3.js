@@ -731,8 +731,6 @@ module.exports = function (grunt) {
 
 					doGzipRename(object, options);
 
-					console.log(object)
-
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
 					if (server_file && !options.overwrite) {
