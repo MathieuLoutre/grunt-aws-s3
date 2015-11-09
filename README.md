@@ -40,6 +40,11 @@ Type: `String`
 
 The AWS secretAccessKey. You can load it via JSON as shown in the example or use the `AWS_SECRET_ACCESS_KEY` environment variable.
 
+#### options.awsProfile
+Type: `String`
+
+Great if you have [credentials profile](http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html#Creating_the_Shared_Credentials_File) stored in `~/.aws/credentials`.
+
 #### options.sessionToken
 Type: `String`
 
