@@ -61,6 +61,11 @@ module.exports = function (grunt) {
 			AWS = require('mock-aws-s3');
 		}
 
+		if (options.awsProfile) {
+		  var credentials = new AWS.SharedIniFileCredentials({profile: options.awsProfile});
+		  AWS.config.credentials = credentials;
+		}
+
 		if (['dots','progressBar','none'].indexOf(options.progress) < 0) {
 			grunt.log.writeln('Invalid progress option; defaulting to dots\n'.yellow);
 			options.progress = 'dots';
