@@ -24,6 +24,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
+    "pretest": "./scripts/create_fixtures.sh",
     "test": "grunt"
   },
   "dependencies": {
