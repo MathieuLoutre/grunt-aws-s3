@@ -478,6 +478,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2015-12-06   v0.14.3  auto generate fixtures by @frankcortes
 * 2015-11-13   v0.14.2  add `awsProfile` option by @trioni
 * 2015-10-25   v0.14.1  Fix gzip ContentEncoding and ContentType leaking to other files
 * 2015-07-09   v0.14.0  Export uploaded files to grunt config (idea from @srlmproductions)
