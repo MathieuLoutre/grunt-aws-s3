@@ -61,7 +61,7 @@ Type: `String`
 The AWS endpoint you'd like to use. Set by default by the region.
 
 #### options.s3ForcePathStyle
-Type: `Boolean`
+Type: `Boolean`  
 Default: `false`
 
 Force use path-style url (http://endpoint/bucket/path) instead of default host-style (http://bucket.endpoint/path)
