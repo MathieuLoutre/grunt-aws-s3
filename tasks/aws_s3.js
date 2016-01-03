@@ -210,7 +210,7 @@ module.exports = function (grunt) {
 		}
 
 		// Allow additional (not required) options
-		_.extend(s3_options, _.pick(options, ['maxRetries', 'sslEnabled', 'httpOptions', 'signatureVersion']));
+		_.extend(s3_options, _.pick(options, ['maxRetries', 'sslEnabled', 'httpOptions', 'signatureVersion', 's3ForcePathStyle']));
 
 		var s3 = new AWS.S3(s3_options);
 
