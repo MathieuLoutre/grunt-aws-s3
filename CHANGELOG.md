@@ -1,5 +1,17 @@
 # CHANGELOG
 
+### v0.14.4
+- add `s3ForcePathStyle` to params by @albert-lacki
+
+### v0.14.3
+- auto generate fixtures by @frankcortes
+
+### v0.14.2
+- add `awsProfile` option by @trioni
+
+### v0.14.1
+- Fix gzip ContentEncoding and ContentType leaking to other files
+
 ### v0.14.0
 - Export uploaded files to grunt config (an idea from @srlmproductions)
 

@@ -484,6 +484,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2016-01-04   v0.14.4  add `s3ForcePathStyle` to params by @albert-lacki
 * 2015-12-06   v0.14.3  auto generate fixtures by @frankcortes
 * 2015-11-13   v0.14.2  add `awsProfile` option by @trioni
 * 2015-10-25   v0.14.1  Fix gzip ContentEncoding and ContentType leaking to other files
