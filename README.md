@@ -50,6 +50,14 @@ Type: `String`
 
 The AWS sessionToken. You can load it via JSON as shown in the example or use the `AWS_SESSION_TOKEN` environment variable.
 
+#### options.useMFA
+Type: `Boolean`
+Default: `false`
+
+If set to `true`, it will use temporary credentials which are valid for 12 hours. When the credentials needs to be refreshed, it will prompt you for your MFA code (A linked mfa device on your AWS account is required for this to work)
+The mfa credentials are cached in `.mfa_*` files, so make sure to add this to your `.gitignore`
+For more information go [here](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html)
+
 #### options.bucket (required)
 Type: `String`
 
