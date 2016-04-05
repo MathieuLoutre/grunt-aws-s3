@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v0.14.5
+- Support for grunt 1.0.0 (goes from ~0.4.0 to >= 0.4.0)
+
 ### v0.14.4
 - add `s3ForcePathStyle` to params by @albert-lacki
 
