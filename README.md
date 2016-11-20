@@ -380,7 +380,7 @@ If you use `differential`, you need to give a `cwd`, which will indicate which f
 The `copy` action just requires a `src` and a `dest` so:
 
 ```js
-  {src: 'app/' dest: 'copy/', 'action': 'delete'}
+  {src: 'app/', dest: 'copy/', 'action': 'delete'}
 ```
 
 The `src` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). It will then copy objects to `dest`.
@@ -388,7 +388,7 @@ The `src` is used as the Prefix in the [listObjects command](http://docs.aws.ama
 The `copy` action can also take an `exclude` option like so:
 
 ```js
-  {src: 'app/' dest: 'copy/', 'action': 'delete', exclude "**/.*"}
+  {src: 'app/', dest: 'copy/', 'action': 'delete', exclude "**/.*"}
 ```
 
 The value is a globbing pattern that can be consumed by `grunt.file.isMatch`. You can find more information on [globbing patterns on Grunt's doc](http://gruntjs.com/api/grunt.file#globbing-patterns). In this example, it will exclude all files starting with a `.` (they won't be copied). `flipExclude` also works.
