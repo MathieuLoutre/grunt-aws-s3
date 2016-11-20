@@ -381,7 +381,6 @@ The `copy` action just requires a `src` and a `dest` so:
 
 ```js
   {src: 'app/', dest: 'copy/', 'action': 'delete'}
-```
 
 The `src` is used as the Prefix in the [listObjects command](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property) to find the files _on the server_ (which means it can be a path or a partial path). It will then copy objects to `dest`.
 
