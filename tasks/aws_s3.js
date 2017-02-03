@@ -229,6 +229,16 @@ module.exports = function (grunt) {
 			}
 		};
 
+		var missingExpand = _.find(this.files, function(filePair) {
+			return ! filePair.orig.expand			// expand not specified
+				&& (! filePair.action || filePair.action == 'upload')	// upload request or default
+				&& filePair.cwd;
+		});
+
+		if (missingExpand) {
+			grunt.warn("File upload action has 'cwd' but is missing 'expand: true', src list will not expand!");
+		}
+		
 		this.files.forEach(function (filePair) {
 
 			is_expanded = filePair.orig.expand || false;

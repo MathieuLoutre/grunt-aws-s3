@@ -244,7 +244,9 @@ By default, the action is `upload`.
 #### `upload`
 
 The `upload` action uses the [newest Grunt file format](http://gruntjs.com/configuring-tasks#files), allowing to take advantage of the `expand` and `filter` options.  
-It is the default action, so you can omit `action: 'upload'` if you want a cleaner look. Don't forget to set a `dest` (use `dest: '/'` for the root).
+It is the default action, so you can omit `action: 'upload'` if you want a cleaner look. Don't forget to set a `dest` (use `dest: '/'` for the root).  
+
+Lastly don't forget to set `expand: true` where you use the `cwd` property or Grunt just ignores it, this is explained in [Grunt Building the files object dynamically](http://gruntjs.com/configuring-tasks#building-the-files-object-dynamically)
 
 ```js
   files: [
