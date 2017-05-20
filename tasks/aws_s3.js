@@ -88,7 +88,7 @@ module.exports = function (grunt) {
 		var getObjectURL = function (file) {
 
 			file = file || '';
-			return s3.endpoint.href + options.bucket + '/' + file;
+			return s3.endpoint.href + s3_options.bucket + '/' + file;
 		};
 
 		// Get the key URL relative to a path string 
@@ -181,26 +181,26 @@ module.exports = function (grunt) {
 			});
 		};
 
-		if (!options.bucket) {
+		var s3_options = {
+			bucket: this.data.bucket || options.bucket,
+			accessKeyId: this.data.accessKeyId || options.accessKeyId,
+			secretAccessKey: this.data.secretAccessKey || options.secretAccessKey,
+			sessionToken: this.data.sessionToken || options.sessionToken
+		};
+        
+        if (!s3_options.bucket) {
 			grunt.warn("Missing bucket in options");
 		}
-
-		var s3_options = {
-			bucket: options.bucket,
-			accessKeyId: options.accessKeyId,
-			secretAccessKey: options.secretAccessKey,
-			sessionToken: options.sessionToken
-		};
 
 		if (!options.region) {
 			grunt.log.writeln("No region defined. S3 will default to US Standard\n".yellow);
 		} 
 		else {
-			s3_options.region = options.region;
+			s3_options.region = this.data.region || options.region;
 		}
 
 		if (options.endpoint) {
-			s3_options.endpoint = options.endpoint;
+			s3_options.endpoint = this.data.endpoint || options.endpoint;
 		}
 
 		if (options.params) {
@@ -345,10 +345,12 @@ module.exports = function (grunt) {
 		// Recursively requests the bucket with a marker if there's more than
 		// 1000 objects. Ensures uniqueness of keys in the returned list. 
 		var listObjects = function (prefix, callback, marker, contents) {
+            
+            
 
 			var search = {
 				Prefix: prefix, 
-				Bucket: options.bucket
+				Bucket: s3_options.bucket
 			};
 
 			if (marker) {
@@ -370,7 +372,7 @@ module.exports = function (grunt) {
 					}
 				}
 				else {
-					grunt.fatal('Failed to list content of bucket ' + options.bucket + '\n' + err);
+					grunt.fatal('Failed to list content of bucket ' + s3_options.bucket + '\n' + err);
 				}
 			});
 		};
@@ -459,7 +461,7 @@ module.exports = function (grunt) {
 							Objects: _.map(delete_list.slice(start, start + 1000), function (o) { return { Key: o.Key }; })
 						};
 
-						s3.deleteObjects({ Delete: slice, Bucket: options.bucket }, function (err, data) { end(err, data); });
+						s3.deleteObjects({ Delete: slice, Bucket: s3_options.bucket }, function (err, data) { end(err, data); });
 					};
 
 					for (var i = 0; i < slices; i++) {
@@ -478,7 +480,7 @@ module.exports = function (grunt) {
 				callback(null, false);
 			}
 			else {
-				s3.copyObject({ Key: object.dest, CopySource: encodeURIComponent(options.bucket + '/' + object.Key), Bucket: options.bucket, ACL: options.access }, function (err, data) {
+				s3.copyObject({ Key: object.dest, CopySource: encodeURIComponent(s3_options.bucket + '/' + object.Key), Bucket: s3_options.bucket, ACL: options.access }, function (err, data) {
 					if (err) {
 						callback(err);
 					}
@@ -558,7 +560,7 @@ module.exports = function (grunt) {
 				grunt.file.mkdir(path.dirname(object.dest));
 
 				var stream = fs.createWriteStream(object.dest);
-				var s3_object = s3.getObject({ Key: object.Key, Bucket: options.bucket }).createReadStream();
+				var s3_object = s3.getObject({ Key: object.Key, Bucket: s3_options.bucket }).createReadStream();
 
 				stream.on('finish', function () {
 					callback(null, true);
@@ -575,7 +577,7 @@ module.exports = function (grunt) {
 				s3_object.pipe(stream);
 			}
 			else {
-				s3.getObject({ Key: object.Key, Bucket: options.bucket }, function (err, data) {
+				s3.getObject({ Key: object.Key, Bucket: s3_options.bucket }, function (err, data) {
 					if (err) {
 						callback(err);
 					}
@@ -716,7 +718,7 @@ module.exports = function (grunt) {
 				var upload = _.defaults({
 					ContentType: type,
 					Key: object.dest,
-					Bucket: options.bucket,
+					Bucket: s3_options.bucket,
 					ACL: options.access
 				}, object.params);
 
@@ -776,7 +778,7 @@ module.exports = function (grunt) {
 				upload_queue.push(task.files, function (err, uploaded) {
 
 					if (err) {
-						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + options.bucket + '\n' + err);
+						grunt.fatal('Failed to upload ' + this.data.src + ' with bucket ' + s3_options.bucket + '\n' + err);
 					}
 					else {
 						switch(options.progress){
@@ -858,16 +860,16 @@ module.exports = function (grunt) {
 			_.each(objects, function (o) {
 
 				if (o.action === "delete") {
-					grunt.log.writeln(o.deleted.toString().green + '/' + o.nb_objects.toString().green + ' objects deleted from ' + (options.bucket + '/' + o.dest).green);
+					grunt.log.writeln(o.deleted.toString().green + '/' + o.nb_objects.toString().green + ' objects deleted from ' + (s3_options.bucket + '/' + o.dest).green);
 				}
 				else if (o.action === "download") {
-					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
+					grunt.log.writeln(o.downloaded.toString().green + '/' + o.nb_objects.toString().green + ' objects downloaded from ' + (s3_options.bucket + '/' + o.dest).green + ' to ' + o.cwd.green);
 				}
 				else if (o.action === "copy") {
-					grunt.log.writeln(o.copied.toString().green + '/' + o.nb_objects.toString().green + ' objects copied from ' + (options.bucket + '/' + o.orig.src[0]).green + ' to ' + (options.bucket + '/' + o.dest).green);
+					grunt.log.writeln(o.copied.toString().green + '/' + o.nb_objects.toString().green + ' objects copied from ' + (s3_options.bucket + '/' + o.orig.src[0]).green + ' to ' + (s3_options.bucket + '/' + o.dest).green);
 				}
 				else {
-					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + (options.bucket + '/').green);
+					grunt.log.writeln(o.uploaded.toString().green + '/' + o.nb_objects.toString().green + ' objects uploaded to bucket ' + (s3_options.bucket + '/').green);
 				}
 			});
 
@@ -983,11 +985,11 @@ module.exports = function (grunt) {
 
 								if (file.need_copy && !file.excluded) {
 									copied++;
-									grunt.log.writeln('- ' + (options.bucket + '/' + file.Key).cyan + ' -> ' + (options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).cyan);
+									grunt.log.writeln('- ' + (s3_options.bucket + '/' + file.Key).cyan + ' -> ' + (s3_options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).cyan);
 								}
 								else {
 									var sign = (file.excluded) ? ' =/= ' : ' === ';
-									grunt.log.writeln('- ' + (options.bucket + '/' + file.Key).yellow + sign + (options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).yellow);
+									grunt.log.writeln('- ' + (s3_options.bucket + '/' + file.Key).yellow + sign + (s3_options.bucket + '/' + task.dest + getRelativeKeyPath(file.Key, task.dest)).yellow);
 								}
 							});
 
