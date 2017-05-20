@@ -62,8 +62,8 @@ module.exports = function (grunt) {
 		}
 
 		if (options.awsProfile) {
-		  var credentials = new AWS.SharedIniFileCredentials({profile: options.awsProfile});
-		  AWS.config.credentials = credentials;
+			var credentials = new AWS.SharedIniFileCredentials({profile: options.awsProfile});
+			AWS.config.credentials = credentials;
 		}
 
 		if (['dots','progressBar','none'].indexOf(options.progress) < 0) {
@@ -88,7 +88,13 @@ module.exports = function (grunt) {
 		var getObjectURL = function (file) {
 
 			file = file || '';
-			return s3.endpoint.href + options.bucket + '/' + file;
+			var prefix = ''
+
+			if (!options.mock) {
+				prefix = s3.endpoint.href
+			}
+			
+			return prefix + options.bucket + '/' + file;
 		};
 
 		// Get the key URL relative to a path string 

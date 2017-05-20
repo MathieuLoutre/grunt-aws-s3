@@ -1,11 +1,11 @@
 {
   "name": "grunt-aws-s3",
   "description": "Interact with AWS S3 using the AWS SDK",
-  "version": "0.14.5",
+  "version": "1.0.0",
   "homepage": "https://github.com/MathieuLoutre/grunt-aws-s3",
   "author": {
     "name": "Mathieu Triay",
-    "email": "mathieu@nightzookeeper.com"
+    "email": "mathieu.triay@gmail.com"
   },
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "grunt-mocha-test": "~0.10.2",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-clean": "~0.5.0",
-    "mock-aws-s3": "0.2.7"
+    "mock-aws-s3": "2.5.0"
   },
   "peerDependencies": {
     "grunt": ">=0.4.0"

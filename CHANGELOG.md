@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### v1.0.0
+- Start semantic versioning
+- Warning when cwd used without expand by @stevemayhew
+- Update mocking module and fixed tests
+
 ### v0.14.5
 - Support for grunt 1.0.0 (goes from ~0.4.0 to >= 0.4.0)
 

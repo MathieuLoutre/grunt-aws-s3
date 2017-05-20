@@ -485,6 +485,7 @@ aws_s3: {
 - Better testing (params, sync, etc.)
 
 ## Release History
+* 2017-05-20   v1.0.0   Warning when cwd used without expand by @stevemayhew. 
 * 2016-04-05   v0.14.5  Support for grunt 1.0.0
 * 2016-01-04   v0.14.4  add `s3ForcePathStyle` to params by @albert-lacki
 * 2015-12-06   v0.14.3  auto generate fixtures by @frankcortes
