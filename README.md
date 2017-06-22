@@ -208,7 +208,7 @@ Default: `aws_s3_changed`
 This tasks exports the list of uploaded files to a variable on the grunt config so it can be used by another task (`grunt-invalidate-cloudfront` for instance). By default it's accessible via `grunt.config.get('aws_s3_changed')` and this option allows you to change the variable name.
 
 
-#### options.gzipRename
+#### options.gzipRename (DEPRECATED - see options.compressionRename)
 Type: `String`
 Default: ``
 
@@ -219,15 +219,33 @@ When using the `gzip` abilities of the task (see below), you can use this option
 
 This only works with the `gzip` abilities of the task which is based on compound extensions like these: `.css.gz`.
 
-### gzip
+#### options.compressionRename
+Type: `String`
+Default: ``
+
+When using the `compression` abilities of the task (see below), you can use this option to change the extensions of the files uploaded to S3. Values can be:  
+- `compress`: will replace the compound extension with the compression specific extension (e.g. `build.css.gz` -> `build.gz`)
+- `ext`: will keep the original extension and remove the compression specific extension (e.g. `build.css.gz` -> `build.css`)
+- `swap`: will swap the two extensions (e.g. `build.css.br` -> `build.br.css`)
+
+This only works with the `compression` abilities of the task which is based on compound extensions like these: `.css.gz`.
+
+#### options.compressionTypes
+Type: `Object`
+Default: `{'.br': 'br', '.gz': 'gzip'}`
+
+When using the `compression` abilities of the task (see below), you can use this option to change if a specific extension is recognized as a compression extension and to change the encoding type this compression algorithm maps to. This option should contain a object that maps extensions to mime types.
+
+
+### compression
 
 This task doesn't compress anything for you. The `grunt-contrib-compress` task is here for that and is much more suitable.  
-However, uploading gzip files is annoying because you need to set `ContentType` and `ContentEncoding` correctly for each of the compressed files. As of version `0.12.0`, this plugin will try to guess if a file needs to have their `ContentType` and `ContentEncoding` changed relying on a convention rather than configuration (inspired by [hapi](https://github.com/hapijs/hapi/blob/master/API.md#built-in-handlers)).
+However, uploading compressed files is annoying because you need to set `ContentType` and `ContentEncoding` correctly for each of the compressed files. As of version `0.12.0`, this plugin will try to guess if a file needs to have their `ContentType` and `ContentEncoding` changed relying on a convention rather than configuration (inspired by [hapi](https://github.com/hapijs/hapi/blob/master/API.md#built-in-handlers)).
 
-The convention is that a gzipped file must have `.gz` in its extension as well as its original extension (e.g. `.css`, `.js`) like so: `build.js.gz`.  
+The convention is that a compressed file must have a compression specific extension, e.g. `.gz`, in its extension as well as its original extension (e.g. `.css`, `.js`) like so: `build.js.gz`.  
 In this case the plugin will apply the `ContentType` from `build.js` to `build.js.gz` and set the `ContentEncoding` to `gzip`.
 
-If for some reason you're not following this convention (e.g. you're naming your files `build.gz`), you can force the ContentType through the `mime` option of the plugin which still has priority. Provided the extension is still `.gz`, the `ContentType` will be set for you. Alternatively, you can use the `gzipRename` option which will be able to rename the files on the fly as they're uploaded to S3.
+If for some reason you're not following this convention (e.g. you're naming your files `build.gz`), you can force the ContentType through the `mime` option of the plugin which still has priority. Provided the extension is still `.gz`, the `ContentType` will be set for you. Alternatively, you can use the `compressionRename` option which will be able to rename the files on the fly as they're uploaded to S3.
 
 ### Actions
 

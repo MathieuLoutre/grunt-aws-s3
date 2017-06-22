@@ -40,7 +40,8 @@ module.exports = function (grunt) {
 			displayChangesOnly: false,
 			progress: 'dots',
 			overwrite: true,
-			changedFiles: 'aws_s3_changed'
+			changedFiles: 'aws_s3_changed',
+			compressionTypes: {'.br': 'br', '.gz': 'gzip'}
 		});
 
 		// To deprecate
@@ -687,28 +688,36 @@ module.exports = function (grunt) {
 			});
 		};
 
-		var doGzipRename = function (object, options) {
-			var lastDot = object.src.lastIndexOf('.')
+		var doCompressionRename = function (object, options) {
+			var lastDot = object.src.lastIndexOf('.');
 
-			if (object.src.substr(lastDot) === '.gz') {
+			if (lastDot !== -1) {
+				var rename = options.gzipRename || options.compressionRename;
+				var extension = object.src.substr(lastDot);
+				var type = options.compressionTypes && options.compressionTypes[extension];
 
-				var originalPath = object.src.substr(0, lastDot)
+				if (type) {
+					var originalPath = object.src.substr(0, lastDot);
 
-				object.params = _.defaults({
-					ContentType: mime.contentType(mime.lookup(originalPath) || "application/octet-stream"),
-					ContentEncoding: 'gzip'
-				}, object.params || {})
+					object.params = _.defaults(
+						{
+							ContentType: mime.contentType(mime.lookup(originalPath) || "application/octet-stream"),
+							ContentEncoding: type
+						}, object.params || {});
 
-				if (options.gzipRename && object.src.match(/\.[^.]+\.gz$/)) {
-
-					if (options.gzipRename === 'ext') {
-						object.dest = object.dest.replace(/\.gz$/, '')
-					}
-					else if (options.gzipRename === 'gz') {
-						object.dest = object.dest.replace(/\.[^.]+\.gz$/, '.gz')
-					}
-					else if (options.gzipRename === 'swap') {
-						object.dest = object.dest.replace(/(\.[^.]+)\.gz$/, '.gz$1')
+					if (rename && object.src.match(new RegExp('\\.[^.]+\\' + extension +'$'))) {
+						if (rename === 'ext') {
+							object.dest = object.dest.replace(
+								new RegExp('\\' + extension + '$'), '');
+						}
+						else if (rename === 'compress' || rename === 'gz') {
+							object.dest = object.dest.replace(
+								new RegExp('\\.[^.]+(\\' + extension + ')$'), '$1');
+						}
+						else if (rename === 'swap') {
+							object.dest = object.dest.replace(
+								new RegExp('(\\.[^.]+)(\\' + extension + ')$'), '$2$1');
+						}
 					}
 				}
 			}
@@ -750,7 +759,7 @@ module.exports = function (grunt) {
 
 				var upload_queue = async.queue(function (object, uploadCallback) {
 
-					doGzipRename(object, options);
+					doCompressionRename(object, options);
 
 					var server_file = _.where(server_files, { Key: object.dest })[0];
 
