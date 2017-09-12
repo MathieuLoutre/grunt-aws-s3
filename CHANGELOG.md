@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v2.0.0
+- Support different compression algorithms, remove support for `gzipRename`, use `compressionRename` now (by @smeder)
+
 ### v1.0.0
 - Start semantic versioning
 - Warning when cwd used without expand by @stevemayhew
