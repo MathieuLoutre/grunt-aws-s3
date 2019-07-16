@@ -6,7 +6,7 @@ function generateCopies {
 }
 
 function generateFixtures {
-  mkdir test/fixtures/upload/otters/$3
+  mkdir -p test/fixtures/upload/otters/$3
   touch "test/fixtures/upload/otters/$3/$2".txt
   touch "test/fixtures/upload/otters/$3/$2 copy".txt
   generateCopies $1 "test/fixtures/upload/otters/$3/$2 copy"
