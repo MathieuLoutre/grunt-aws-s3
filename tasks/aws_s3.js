@@ -82,7 +82,7 @@ module.exports = function (grunt) {
 		var isValidParams = function (params) {
 
 			return _.every(_.keys(params), function (key) {
-				return _.contains(put_params, key);
+				return _.includes(put_params, key);
 			});
 		};
 
