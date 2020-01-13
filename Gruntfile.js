@@ -37,7 +37,11 @@ module.exports = function (grunt) {
 					{dest: '/', cwd: 'test/local/download/backup/', action: 'download', stream: false},
 					{dest: 'first/otters/updated/', action: 'delete'},
 					{dest: 'punk/', action: 'delete'},
-					{expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/'},
+					{expand: true, cwd: "test/local/upload/otters/river/", src: ['**'], dest: 'second/',
+					params: {
+	          Expires: 1893456000,
+	          CacheControl: 'public, max-age=864000',
+	        }},
 					{dest: 'otters/funk/', cwd: 'test/local/download/backup/', action: 'download'},
 					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'second/', differential: true},
 					{expand: true, cwd: "test/local/upload/otters/updated/", src: ['**'], dest: 'third/'},
