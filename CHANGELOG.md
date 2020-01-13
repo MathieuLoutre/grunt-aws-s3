@@ -1,5 +1,8 @@
 # CHANGELOG
 
+### v2.0.2
+- Fix lodash contains and update tests (by @eugenioclrc)
+
 ### v2.0.1
 - Update lodash to latest version (by @ffflorian)
 
